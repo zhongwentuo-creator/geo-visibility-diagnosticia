@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ report.meta.brandName | default('品牌') }} - GEO 可见度诊断报告</title>
+<style>
+/* ================================================================
+   GEO 可见度诊断报告 — shadcn/ui 语义化主题
+   支持浅色/深色（.dark）与 prefers-reduced-motion
+   ================================================================ */
+
+/* ---------- 1. 语义 Token ---------- */
+:root {
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  --success: oklch(0.55 0.14 160);
+  --success-foreground: oklch(0.28 0.08 160);
+  --success-soft: oklch(0.65 0.12 160);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.35 0.09 65);
+  --warning-strong: oklch(0.65 0.18 30);
+  --info: oklch(0.55 0.14 250);
+  --info-foreground: oklch(0.3 0.08 250);
+
+  --font-sans: "Inter", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", "Consolas", monospace;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+
+/* ---------- 2. 基础重置 ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- 3. 布局 ---------- */
+.container { max-width: 1120px; margin: 0 auto; padding: 24px; }
+
+main { display: flex; flex-direction: column; gap: 24px; }
+
+section {
+  background: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* 首屏淡入（仅一个 section） */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-section { animation: fadeIn 480ms ease-out both; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- 4. 排版 ---------- */
+h1 { font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; letter-spacing: -0.02em; }
+h2 { font-size: 18px; font-weight: 600; line-height: 1.3; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+h2::before { content: ""; width: 3px; height: 16px; border-radius: 2px; background: var(--primary); }
+h3 { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 10px; color: var(--card-foreground); }
+p  { color: var(--muted-foreground); margin-bottom: 12px; }
+a  { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- 5. 评分与状态色 ---------- */
+.score-excellent { color: var(--success) !important; }
+.score-good      { color: var(--success-soft) !important; }
+.score-medium    { color: var(--warning) !important; }
+.score-poor      { color: var(--warning-strong) !important; }
+.score-bad       { color: var(--destructive) !important; }
+
+.bg-excellent { background: color-mix(in oklch, var(--success) 12%, transparent) !important; color: var(--success) !important; border: 1px solid color-mix(in oklch, var(--success) 30%, transparent) !important; }
+.bg-good      { background: color-mix(in oklch, var(--success-soft) 12%, transparent) !important; color: var(--success-soft) !important; border: 1px solid color-mix(in oklch, var(--success-soft) 30%, transparent) !important; }
+.bg-medium    { background: color-mix(in oklch, var(--warning) 16%, transparent) !important; color: var(--warning-foreground) !important; border: 1px solid color-mix(in oklch, var(--warning) 30%, transparent) !important; }
+.bg-poor      { background: color-mix(in oklch, var(--warning-strong) 12%, transparent) !important; color: var(--warning-strong) !important; border: 1px solid color-mix(in oklch, var(--warning-strong) 30%, transparent) !important; }
+.bg-bad       { background: color-mix(in oklch, var(--destructive) 12%, transparent) !important; color: var(--destructive) !important; border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent) !important; }
+
+/* ---------- 6. 徽章 / 状态 ---------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  min-height: 1.5rem; padding: 0 0.5rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.75rem; font-weight: 500; line-height: 1;
+  white-space: nowrap;
+}
+.badge-sm { padding: 0 0.375rem; font-size: 0.6875rem; }
+
+.status {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  min-height: 1.5rem; padding: 0 0.5rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.75rem; font-weight: 500;
+}
+.status[data-tone="success"]     { background: color-mix(in oklch, var(--success) 12%, transparent);     color: var(--success-foreground);     border-color: color-mix(in oklch, var(--success) 25%, transparent); }
+.status[data-tone="warning"]     { background: color-mix(in oklch, var(--warning) 16%, transparent);     color: var(--warning-foreground);     border-color: color-mix(in oklch, var(--warning) 25%, transparent); }
+.status[data-tone="destructive"] { background: color-mix(in oklch, var(--destructive) 12%, transparent); color: var(--destructive);             border-color: color-mix(in oklch, var(--destructive) 25%, transparent); }
+.status[data-tone="info"]        { background: color-mix(in oklch, var(--info) 12%, transparent);        color: var(--info-foreground);        border-color: color-mix(in oklch, var(--info) 25%, transparent); }
+
+/* ---------- 7. 状态面板（empty / loading / error） ---------- */
+.state-panel {
+  text-align: center; padding: 32px 24px;
+  border: 1px dashed var(--border); border-radius: var(--radius-lg);
+  background: var(--muted);
+}
+.state-panel .state-icon { font-size: 24px; margin-bottom: 8px; line-height: 1; }
+.state-panel .state-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--card-foreground); }
+.state-panel .state-desc  { font-size: 13px; color: var(--muted-foreground); margin-bottom: 0; }
+.state-panel .state-action { margin-top: 12px; }
+
+/* 骨架屏 */
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  min-height: 1em;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton { animation: shimmer 1.5s infinite; }
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---------- 8. 网格 ---------- */
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ---------- 9. 条形图 ---------- */
+.bar-chart { display: flex; flex-direction: column; gap: 12px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { width: 110px; font-size: 12px; color: var(--muted-foreground); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 20px; background: var(--muted); border-radius: var(--radius-sm); overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--primary-foreground); min-width: 28px; width: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .bar-fill[data-width] { transition: width 480ms ease-out; }
+}
+
+/* ---------- 10. 表格 ---------- */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.data-table th { font-weight: 600; color: var(--muted-foreground); background: var(--muted); font-size: 12px; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--accent); }
+.data-table .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ---------- 11. 时间轴 ---------- */
+.timeline { position: relative; padding-left: 20px; }
+.timeline::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 0; width: 2px; background: var(--border); }
+.timeline-item { position: relative; padding-bottom: 12px; }
+.timeline-item::before { content: ""; position: absolute; left: -17px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--card); border: 2px solid var(--muted-foreground); }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-label { font-size: 11px; font-weight: 500; color: var(--muted-foreground); margin-bottom: 2px; letter-spacing: 0.02em; }
+
+/* ---------- 12. 搜索矩阵卡片 ---------- */
+.query-card { border-radius: var(--radius-md); padding: 10px 14px; font-size: 12px; border: 1px solid var(--border); }
+.query-card[data-tone="success"]        { background: color-mix(in oklch, var(--success) 10%, transparent);        border-color: color-mix(in oklch, var(--success) 25%, transparent);        color: var(--success); }
+.query-card[data-tone="success-soft"]   { background: color-mix(in oklch, var(--success-soft) 10%, transparent);   border-color: color-mix(in oklch, var(--success-soft) 25%, transparent);   color: var(--success-soft); }
+.query-card[data-tone="destructive"]    { background: color-mix(in oklch, var(--destructive) 10%, transparent);    border-color: color-mix(in oklch, var(--destructive) 25%, transparent);    color: var(--destructive); }
+.query-card .q-title { font-weight: 600; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 8px; }
+.query-card .q-title span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.query-card .q-meta { color: var(--muted-foreground); display: flex; justify-content: space-between; font-size: 11px; }
+
+/* ---------- 13. 摘要面板 ---------- */
+.summary-box {
+  background: var(--accent);
+  border-left: 3px solid var(--primary);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-bottom: 20px;
+}
+.summary-box p { margin: 0; color: var(--accent-foreground); font-size: 14px; font-weight: 500; }
+
+/* ---------- 14. 环形图 ---------- */
+.donut-chart { width: 140px; height: 140px; border-radius: 50%; position: relative; margin: 0 auto 12px; }
+.donut-chart::before {
+  content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 80px; height: 80px; background: var(--card); border-radius: 50%;
+}
+.donut-legend { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.donut-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted-foreground); }
+
+/* ---------- 15. 雷达图 ---------- */
+.radar-chart { display: flex; justify-content: center; align-items: center; }
+.radar-chart text { font-size: 11px; fill: var(--muted-foreground); }
+.radar-chart line { stroke: var(--border); }
+.radar-chart polygon { fill: color-mix(in oklch, var(--primary) 15%, transparent); stroke: var(--primary); }
+.radar-chart circle { fill: var(--primary); }
+
+/* ---------- 16. 行动卡片 ---------- */
+.action-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; background: var(--card);
+  border-radius: var(--radius-md); margin-bottom: 8px;
+  border-left: 3px solid var(--border);
+}
+.action-card .action-body { flex: 1; }
+.action-card .action-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: var(--card-foreground); }
+.action-card .action-desc { font-size: 12px; color: var(--muted-foreground); margin-bottom: 3px; }
+.action-card .action-meta { font-size: 11px; color: var(--muted-foreground); }
+
+/* ---------- 17. Quick Win 卡片 ---------- */
+.quickwin-card {
+  background: var(--secondary);
+  border-radius: var(--radius-md); padding: 16px;
+  border: 1px solid var(--border);
+}
+.quickwin-card .quickwin-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--secondary-foreground); }
+.quickwin-card .quickwin-desc { font-size: 12px; color: var(--muted-foreground); }
+.quickwin-card .quickwin-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted-foreground); margin-top: 8px; }
+
+/* ---------- 18. 指标卡片 ---------- */
+.metric-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: var(--muted);
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+}
+.metric-card .metric-orb {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-family: var(--font-mono); font-size: 13px;
+  color: var(--primary-foreground); flex-shrink: 0;
+}
+.metric-card .metric-name { font-weight: 600; font-size: 13px; color: var(--card-foreground); }
+.metric-card .metric-meta { font-size: 11px; color: var(--muted-foreground); }
+
+/* ---------- 19. 数字展示 ---------- */
+.big-number {
+  font-family: var(--font-mono); font-size: 48px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--primary);
+}
+.big-number-label { font-size: 12px; color: var(--muted-foreground); margin-top: 6px; letter-spacing: 0.02em; }
+
+/* ---------- 20. 页脚 ---------- */
+footer { text-align: center; padding: 24px; color: var(--muted-foreground); font-size: 12px; }
+
+/* ---------- 21. 焦点环（可访问性） ---------- */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ---------- 22. 响应式 ---------- */
+@media (max-width: 640px) {
+  .container { padding: 16px; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 16px; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  section { padding: 16px; }
+  .bar-label { width: 80px; }
+  .big-number { font-size: 40px; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+{# ===== 数据路径兼容：stages 嵌套 与 扁平结构 ===== #}
+{% set r = report.stages | default(report) %}
+{% set meta = report.meta | default({}) %}
+{% set userProfile = r.userProfile | default(r.userProfiles | default({})) %}
+{% set infra = r.infraEval | default(r.infrastructure | default({})) %}
+{% set competitor = r.competitor | default(r.competitors | default({})) %}
+{% set aiSearch = r.aiSearch | default({}) %}
+{% set geoEffect = r.geoEffect | default({}) %}
+{% set sentiment = r.sentiment | default({}) %}
+{% set overview = r.overview | default({}) %}
+{% set aivoScore = r.aivoScore | default({}) %}
+{% set suggestion = r.suggestion | default(r.suggestions | default({})) %}
+
+{# ===== 颜色 / CSS 类 宏 ===== #}
+{%- macro score_color(score) -%}
+  {%- if score >= 90 -%}var(--success){%- elif score >= 80 -%}var(--success-soft){%- elif score >= 70 -%}var(--warning){%- elif score >= 60 -%}var(--warning-strong){%- else -%}var(--destructive){%- endif -%}
+{%- endmacro -%}
+
+{%- macro score_class(score) -%}
+  {%- if score >= 90 -%}score-excellent{%- elif score >= 80 -%}score-good{%- elif score >= 70 -%}score-medium{%- elif score >= 60 -%}score-poor{%- else -%}score-bad{%- endif -%}
+{%- endmacro -%}
+
+{%- macro grade_badge_class(grade) -%}
+  {%- if grade == '优秀' -%}bg-excellent{%- elif grade == '良好' -%}bg-good{%- elif grade == '中等' -%}bg-medium{%- elif grade == '较差' -%}bg-poor{%- else -%}bg-bad{%- endif -%}
+{%- endmacro -%}
+
+{% set total_score = aivoScore.total | default(0) %}
+{% set grade = aivoScore.grade | default('差') %}
+
+<!-- ==================== 报告头部 ==================== -->
+<header class="hero-section" style="text-align: center; padding: 40px 24px; background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 24px;">
+  <div style="font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.08em; margin-bottom: 12px; font-weight: 500;">GEO 可见度诊断报告</div>
+  <h1 style="margin-bottom: 4px;">{{ meta.brandName | default('品牌') }}</h1>
+  <p style="font-size: 14px; margin-bottom: 20px; color: var(--muted-foreground);">{{ meta.productType | default('') }}</p>
+  <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+    <span class="badge" style="background: var(--muted); color: var(--muted-foreground);">{{ meta.platform | default('未知平台') }}</span>
+    <span class="badge" style="background: var(--muted); color: var(--muted-foreground);">{{ meta.diagnosisDate | default(meta.generatedAt | default('') | truncate(10, True, '')) }}</span>
+  </div>
+
+  <!-- AIVO 大数字 -->
+  <div style="margin-bottom: 16px;">
+    <div class="big-number {{ score_class(total_score) }}" style="font-size: 56px;">{{ total_score }}</div>
+    <div class="big-number-label">AIVO 总分 / 100</div>
+  </div>
+
+  <div>
+    <span class="badge {{ grade_badge_class(grade) }}">{{ grade }}</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ==================== 执行摘要 ==================== -->
+<section id="summary">
+  <h2>执行摘要</h2>
+  <div class="summary-box">
+    <p>{{ overview.oneLiner | default('诊断数据正在生成中...') }}</p>
+  </div>
+
+  <!-- 4 维度速览 -->
+  {% set dims = aivoScore.dimensions | default([]) %}
+  {% if dims %}
+  <div class="grid grid-2" style="margin-bottom: 20px;">
+    {% for dim in dims %}
+      {% set dc = score_color(dim.score | default(0)) %}
+      <div class="metric-card">
+        <div class="metric-orb" style="background: {{ dc }};">
+          {{ dim.score | default(0) }}
+        </div>
+        <div>
+          <div class="metric-name">{{ dim.name | default('') }}</div>
+          <div class="metric-meta">{{ dim.code | default('') }} · 权重 {{ (dim.weight | default(0.25)) * 100 }}%</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="state-panel" role="status" aria-live="polite">
+      <div class="state-icon">⏳</div>
+      <div class="state-title">维度评分数据暂缺</div>
+      <div class="state-desc">部分诊断维度尚未完成采集，评分将在数据完整后自动更新。</div>
+    </div>
+  {% endif %}
+
+  <div class="grid grid-2">
+    <!-- 亮点 -->
+    <div>
+      <h3 style="color: var(--success);">核心亮点</h3>
+      {% set highlights = overview.highlights | default([]) %}
+      {% if highlights %}
+        {% for h in highlights[:5] %}
+          <div class="bg-excellent" style="border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 8px;">
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 3px;">{{ h.title | default('') }}</div>
+            <div style="font-size: 12px; opacity: 0.9;">{{ h.description | default('') }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="state-panel">
+          <div class="state-icon">✦</div>
+          <div class="state-title">暂无亮点数据</div>
+          <div class="state-desc">当前分析未发现显著优势维度，建议优先处理风险项。</div>
+        </div>
+      {% endif %}
+    </div>
+    <!-- 风险 -->
+    <div>
+      <h3 style="color: var(--destructive);">核心风险</h3>
+      {% set risks = overview.risks | default([]) %}
+      {% if risks %}
+        {% for ri in risks[:5] %}
+          <div class="bg-bad" style="border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 8px;">
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 3px;">
+              {{ ri.title | default('') }}
+              {% if ri.severity %}<span class="badge badge-sm bg-bad" style="margin-left: 6px;">{{ ri.severity }}</span>{% endif %}
+            </div>
+            <div style="font-size: 12px; opacity: 0.9;">{{ ri.description | default('') }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="state-panel">
+          <div class="state-icon">✓</div>
+          <div class="state-title">未发现显著风险</div>
+          <div class="state-desc">当前分析未发现高优先级风险项，建议维持现有策略。</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 用户画像 ==================== -->
+<section id="profile">
+  <h2>用户画像</h2>
+  <p>共识别 {{ userProfile.totalQueries | default(0) }} 个典型搜索问题，覆盖 {{ userProfile.segments | default([]) | length }} 类核心用户群体</p>
+  <div class="grid grid-3">
+    {% for seg in userProfile.segments | default([]) %}
+      <div style="background: var(--muted); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border);">
+        <div style="font-size: 11px; color: var(--muted-foreground); margin-bottom: 3px; letter-spacing: 0.02em; font-weight: 500;">{{ seg.id | default('') }}</div>
+        <div style="font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--card-foreground);">{{ seg.label | default('') }}</div>
+        <div style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 10px;">{{ seg.demographics | default(seg.description | default('')) }}</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
+          {% for intent in seg.searchIntent | default([]) %}
+            <span class="badge" style="background: var(--accent); color: var(--accent-foreground); border-color: var(--border);">{{ intent }}</span>
+          {% endfor %}
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--muted-foreground);">{{ seg.queries | default([]) | length }} 个搜索问题</div>
+      </div>
+    {% else %}
+      <div class="state-panel" style="grid-column: 1 / -1;" role="status" aria-live="polite">
+        <div class="state-icon">👤</div>
+        <div class="state-title">暂无用户画像数据</div>
+        <div class="state-desc">搜索 API 未返回用户分群信息，或数据采集尚未完成。建议检查数据源配置后重试。</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ==================== 基建评估 ==================== -->
+<section id="infra">
+  <h2>基建评估</h2>
+  <div class="grid grid-2">
+    <div>
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 600; font-size: 14px;">基建综合评分</span>
+          <span class="big-number" style="font-size: 20px; color: {{ score_color(infra.total | default(0)) }};">{{ infra.total | default(0) }}</span>
+        </div>
+        <div style="height: 8px; background: var(--muted); border-radius: var(--radius-sm); overflow: hidden;">
+          <div class="bar-fill" style="width: 0;" data-width="{{ infra.total | default(0) }}%" data-color="{{ score_color(infra.total | default(0)) }}"></div>
+        </div>
+      </div>
+      <div class="bar-chart">
+        {% set infra_items = [
+          ('官网健康度', infra.websiteScore | default(0)),
+          ('自媒体矩阵', infra.socialMediaScore | default(0)),
+          ('权威媒体覆盖', infra.authorityMediaScore | default(0))
+        ] %}
+        {% for label, score in infra_items %}
+          <div class="bar-row">
+            <div class="bar-label">{{ label }}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 0;" data-width="{{ score }}%" data-color="{{ score_color(score) }}">{{ score }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- SVG 雷达图 -->
+    <div class="radar-chart">
+      {% set w = infra.websiteScore | default(0) %}
+      {% set s = infra.socialMediaScore | default(0) %}
+      {% set a = infra.authorityMediaScore | default(0) %}
+      {% set y1 = 150 - 1.2 * w %}
+      {% set x2 = 150 + 1.04 * s %}
+      {% set y2 = 150 + 0.6 * s %}
+      {% set x3 = 150 - 1.04 * a %}
+      {% set y3 = 150 + 0.6 * a %}
+      <svg width="300" height="260" viewBox="0 0 300 260">
+        <!-- 轴线 -->
+        <line x1="150" y1="150" x2="150" y2="30" stroke-width="1"/>
+        <line x1="150" y1="150" x2="254" y2="210" stroke-width="1"/>
+        <line x1="150" y1="150" x2="46" y2="210" stroke-width="1"/>
+        <!-- 数据 -->
+        <polygon points="150,{{ y1 }} {{ x2 }},{{ y2 }} {{ x3 }},{{ y3 }}"/>
+        <circle cx="150" cy="{{ y1 }}" r="4"/>
+        <circle cx="{{ x2 }}" cy="{{ y2 }}" r="4"/>
+        <circle cx="{{ x3 }}" cy="{{ y3 }}" r="4"/>
+        <!-- 标签 -->
+        <text x="150" y="20" text-anchor="middle">官网 {{ w }}</text>
+        <text x="262" y="222" text-anchor="start">自媒体 {{ s }}</text>
+        <text x="38" y="222" text-anchor="end">权威媒体 {{ a }}</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 媒体矩阵详情 -->
+  {% set social = infra.details.socialMedia | default({}) %}
+  {% set auth = infra.details.authorityMedia | default({}) %}
+  {% if social.platforms or auth.media %}
+  <div style="margin-top: 24px;">
+    <h3>媒体矩阵详情</h3>
+    <table class="data-table">
+      <thead><tr><th>平台 / 媒体</th><th>状态</th><th class="num">得分</th></tr></thead>
+      <tbody>
+        {% for p in social.platforms | default([]) %}
+          <tr>
+            <td>{{ p.platform | default('') }}</td>
+            <td>
+              {% if p.exists is sameas true %}
+                <span class="badge bg-excellent">已认证</span>
+                {% if p.active is sameas true %}<span class="badge bg-good">活跃</span>{% endif %}
+              {% elif p.exists is sameas false %}
+                <span class="badge bg-bad">未开通</span>
+              {% else %}
+                <span class="badge bg-medium">数据暂缺</span>
+              {% endif %}
+            </td>
+            <td class="num">{{ p.score | default(0) }}/{{ p.maxScore | default(20) }}</td>
+          </tr>
+        {% endfor %}
+        {% for m in auth.media | default([]) %}
+          <tr>
+            <td>{{ m.source | default('') }}</td>
+            <td>
+              {% if m.count | default(0) > 0 %}
+                <span class="badge bg-excellent">{{ m.count }} 篇</span>
+                <span class="badge bg-medium">{{ m.quality | default('') }}</span>
+              {% else %}
+                <span class="badge bg-bad">无报道</span>
+              {% endif %}
+            </td>
+            <td class="num">{{ m.score | default(0) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="state-panel" style="margin-top: 20px;" role="status" aria-live="polite">
+      <div class="state-icon">📊</div>
+      <div class="state-title">媒体矩阵数据暂缺</div>
+      <div class="state-desc">未获取到社交媒体或权威媒体的详细评估数据。</div>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ==================== 竞品对标 ==================== -->
+<section id="competitor">
+  <h2>竞品对标</h2>
+  {% set competitors = competitor.competitors | default([]) %}
+  {% set benchmark = competitor.benchmarkAverage | default(0) %}
+  <p>已识别 {{ competitors | length }} 家竞品，行业平均 AIVO 分 <span class="num" style="font-family: var(--font-mono); font-weight: 600;">{{ benchmark }}</span></p>
+
+  {% if competitors %}
+  <div class="bar-chart" style="margin: 16px 0;">
+    <!-- 本品牌 -->
+    <div class="bar-row">
+      <div class="bar-label" style="font-weight: 600; color: var(--card-foreground);">{{ meta.brandName | default('本品牌') }}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: 0;" data-width="{{ total_score }}%" data-color="{{ score_color(total_score) }}">{{ total_score }}</div>
+      </div>
+    </div>
+    <!-- 竞品 -->
+    {% for c in competitors %}
+      {% set cs = c.aivoScore | default(0) %}
+      <div class="bar-row">
+        <div class="bar-label">{{ c.name | default(c.brandName | default('')) }}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 0;" data-width="{{ cs }}%" data-color="var(--muted-foreground)">{{ cs }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-3">
+    {% for c in competitors %}
+      {% set cs = c.aivoScore | default(0) %}
+      <div style="background: var(--muted); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border);">
+        <div style="font-weight: 600; margin-bottom: 3px; font-size: 14px; color: var(--card-foreground);">{{ c.name | default(c.brandName | default('')) }}</div>
+        <div style="font-size: 12px; color: var(--muted-foreground); margin-bottom: 10px;">{{ c.matchReason | default('') }}</div>
+        <div class="big-number" style="font-size: 24px; color: {{ score_color(cs) }};">{{ cs }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="state-panel" role="status" aria-live="polite">
+      <div class="state-icon">🏢</div>
+      <div class="state-title">竞品数据暂缺</div>
+      <div class="state-desc">未识别到有效竞品数据。请确认竞品名称或行业关键词配置是否正确。</div>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ==================== AI 搜索可见性 ==================== -->
+<section id="ai-search">
+  <h2>AI 搜索可见性</h2>
+  {% set cross = geoEffect.crossPlatformSummary | default({}) %}
+  {% set ai_results = aiSearch.results | default([]) %}
+  <div class="grid grid-3" style="margin-bottom: 20px;">
+    <div style="text-align: center; padding: 16px; background: var(--muted); border-radius: var(--radius-md); border: 1px solid var(--border);">
+      <div class="big-number" style="font-size: 28px; color: {{ score_color(aiSearch.mentionRate | default(0)) }};">{{ aiSearch.mentionRate | default(0) }}%</div>
+      <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 4px;">提及率</div>
+    </div>
+    <div style="text-align: center; padding: 16px; background: var(--muted); border-radius: var(--radius-md); border: 1px solid var(--border);">
+      <div class="big-number" style="font-size: 28px; color: {{ score_color(aiSearch.firstParagraphRate | default(0)) }};">{{ aiSearch.firstParagraphRate | default(0) }}%</div>
+      <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 4px;">首段提及率</div>
+    </div>
+    <div style="text-align: center; padding: 16px; background: var(--muted); border-radius: var(--radius-md); border: 1px solid var(--border);">
+      <div class="big-number" style="font-size: 28px; color: {{ score_color(aiSearch.avgInfoCompleteness | default(0)) }};">{{ aiSearch.avgInfoCompleteness | default(0) }}</div>
+      <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 4px;">平均信息完整度</div>
+    </div>
+  </div>
+
+  <!-- 意图分布 -->
+  {% set intent_data = cross.intentBreakdown | default([]) %}
+  {% if intent_data %}
+    <h3>意图分布</h3>
+    <div class="bar-chart" style="margin-bottom: 16px;">
+      {% for idata in intent_data %}
+        <div class="bar-row">
+          <div class="bar-label">{{ idata.intent | default('') }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 0;" data-width="{{ idata.mentionRate | default(0) }}%" data-color="{{ score_color(idata.mentionRate | default(0)) }}">{{ idata.mentioned | default(0) }}/{{ idata.totalQueries | default(0) }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- 搜索结果矩阵 -->
+  {% if ai_results %}
+    <h3>搜索结果矩阵（{{ ai_results | length }} 条 Query）</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-top: 10px;">
+      {% for r in ai_results %}
+        {% set mentioned = r.mentioned | default(false) %}
+        {% set pos = r.position | default('not_mentioned') %}
+        {% if mentioned %}
+          {% if pos == 'first_paragraph' %}
+            {% set card_tone = 'success' %}
+            {% set card_icon = '✓' %}
+          {% else %}
+            {% set card_tone = 'success-soft' %}
+            {% set card_icon = '○' %}
+          {% endif %}
+        {% else %}
+          {% set card_tone = 'destructive' %}
+          {% set card_icon = '✗' %}
+        {% endif %}
+        <div class="query-card" data-tone="{{ card_tone }}">
+          <div class="q-title">
+            <span style="color: var(--card-foreground);">{{ r.query | default('') }}</span>
+            <span>{{ card_icon }}</span>
+          </div>
+          <div class="q-meta">
+            <span>{{ r.intent | default('') }}</span>
+            <span>{{ r.sentiment | default('') }}</span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="state-panel" role="status" aria-live="polite">
+      <div class="state-icon">🔍</div>
+      <div class="state-title">AI 搜索结果暂缺</div>
+      <div class="state-desc">未获取到 AI 搜索平台的查询结果数据。可能由于 API 限流或查询队列未完成。</div>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ==================== 舆情健康度 ==================== -->
+<section id="sentiment">
+  <h2>舆情健康度</h2>
+  {% set neg_rate = sentiment.negativeRate | default(-1) %}
+  {% set pos_rate = sentiment.sentimentDistribution.positive | default(0) %}
+  {% set neu_rate = sentiment.sentimentDistribution.neutral | default(0) %}
+  {% set risk_level = sentiment.riskLevel | default('数据缺失') %}
+
+  {% if neg_rate < 0 %}
+    <div class="state-panel" role="status" aria-live="polite">
+      <div class="state-icon">📰</div>
+      <div class="state-title">舆情数据暂缺</div>
+      <div class="state-desc">搜索 API 不可用或返回数据不足，无法评估舆情健康度。</div>
+    </div>
+  {% else %}
+    <div class="grid grid-2">
+      <div>
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <div style="font-size: 11px; color: var(--muted-foreground); font-weight: 500;">负面率</div>
+            <div class="big-number" style="font-size: 32px; color: {{ score_color(100 - neg_rate) }};">{{ neg_rate }}%</div>
+          </div>
+          <div>
+            <span class="badge {{ grade_badge_class(risk_level) }}">{{ risk_level }}</span>
+          </div>
+        </div>
+
+        <!-- CSS 环形图 -->
+        <div class="donut-chart" style="background: conic-gradient(
+          var(--success) 0% {{ pos_rate }}%,
+          var(--warning) {{ pos_rate }}% {{ pos_rate + neu_rate }}%,
+          var(--destructive) {{ pos_rate + neu_rate }}% 100%
+        );">
+        </div>
+        <div class="donut-legend">
+          <div class="donut-legend-item"><div style="width: 8px; height: 8px; border-radius: 2px; background: var(--success);"></div>正面 {{ pos_rate }}%</div>
+          <div class="donut-legend-item"><div style="width: 8px; height: 8px; border-radius: 2px; background: var(--warning);"></div>中性 {{ neu_rate }}%</div>
+          <div class="donut-legend-item"><div style="width: 8px; height: 8px; border-radius: 2px; background: var(--destructive);"></div>负面 {{ neg_rate }}%</div>
+        </div>
+      </div>
+      <div>
+        <h3>Top 问题</h3>
+        {% set top_issues = sentiment.topIssues | default([]) %}
+        {% if top_issues %}
+          {% for issue in top_issues %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 600; font-size: 13px; color: var(--card-foreground);">{{ issue.issue | default(issue.title | default('')) }}</div>
+                <div style="font-size: 12px; color: var(--muted-foreground);">{{ issue.platform | default('') }}</div>
+              </div>
+              {% set sev = issue.severity | default('中') %}
+              <span class="badge badge-sm {% if sev == '高' %}bg-bad{% elif sev == '中' %}bg-poor{% else %}bg-medium{% endif %}">{{ sev }}</span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="state-panel" style="text-align: left; border-style: solid; padding: 16px;">
+            <div class="state-title">未发现显著问题</div>
+            <div class="state-desc">舆情监测未发现需要立即处理的高优先级负面问题。</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ==================== 优化建议 ==================== -->
+<section id="suggestions">
+  <h2>优化建议</h2>
+
+  <!-- 优先级行动 -->
+  {% set priority_actions = suggestion.priorityActions | default(suggestion.actions | default([])) %}
+  {% if priority_actions %}
+    <h3>优先级行动</h3>
+    {% for action in priority_actions[:5] %}
+      {% set pri = action.priority | default('中') %}
+      {% set border_c = 'var(--success)' if pri == '低' else ('var(--warning)' if pri == '中' else 'var(--destructive)') %}
+      <div class="action-card" style="border-left-color: {{ border_c }};">
+        <div style="flex-shrink: 0;">
+          <span class="badge {% if pri == '高' %}bg-bad{% elif pri == '中' %}bg-medium{% else %}bg-good{% endif %}">{{ pri }}</span>
+        </div>
+        <div class="action-body">
+          <div class="action-title">{{ action.title | default('') }}</div>
+          <div class="action-desc">{{ action.description | default('') }}</div>
+          <div class="action-meta">
+            {% if action.timeline %}⏱ {{ action.timeline }} {% endif %}
+            {% if action.expectedImprovement %}📈 +{{ action.expectedImprovement }}分{% endif %}
+            {% if action.category %}· {{ action.category }}{% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="state-panel">
+      <div class="state-icon">📝</div>
+      <div class="state-title">优先级行动暂缺</div>
+      <div class="state-desc">未生成优先级行动建议。请检查诊断模型配置或稍后重试。</div>
+    </div>
+  {% endif %}
+
+  <!-- Quick Wins -->
+  {% set quick_wins = suggestion.quickWins | default([]) %}
+  {% if quick_wins %}
+    <h3 style="margin-top: 24px;">Quick Wins（低投入高回报）</h3>
+    <div class="grid grid-3">
+      {% for qw in quick_wins[:6] %}
+        <div class="quickwin-card">
+          <div class="quickwin-title">{{ qw.title | default(qw.description | default('') | truncate(30, true, '')) }}</div>
+          <div class="quickwin-desc">{{ qw.description | default('') | truncate(80, true, '...') }}</div>
+          <div class="quickwin-meta">
+            {% if qw.timeline %}{{ qw.timeline }}{% endif %}
+            {% if qw.expectedImprovement %}+{{ qw.expectedImprovement }}分{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- 三阶段路线图 -->
+  {% set roadmap = suggestion.roadmap | default({}) %}
+  <h3 style="margin-top: 24px;">三阶段路线图</h3>
+  <div class="grid grid-3">
+    <div>
+      <div style="font-size: 12px; font-weight: 600; color: var(--destructive); margin-bottom: 8px; letter-spacing: 0.02em;">P1 即时（0-4 周）</div>
+      <div class="timeline">
+        {% for item in roadmap.P1 | default([]) %}
+          <div class="timeline-item">
+            <div class="timeline-label">立即执行</div>
+            <div style="font-size: 13px; color: var(--card-foreground);">{{ item }}</div>
+          </div>
+        {% else %}
+          <div class="timeline-item"><div style="font-size: 13px; color: var(--muted-foreground);">暂无数据</div></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <div style="font-size: 12px; font-weight: 600; color: var(--warning); margin-bottom: 8px; letter-spacing: 0.02em;">P2 短期（1-3 月）</div>
+      <div class="timeline">
+        {% for item in roadmap.P2 | default([]) %}
+          <div class="timeline-item">
+            <div class="timeline-label">系统提升</div>
+            <div style="font-size: 13px; color: var(--card-foreground);">{{ item }}</div>
+          </div>
+        {% else %}
+          <div class="timeline-item"><div style="font-size: 13px; color: var(--muted-foreground);">暂无数据</div></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <div style="font-size: 12px; font-weight: 600; color: var(--success); margin-bottom: 8px; letter-spacing: 0.02em;">P3 长期（3-6 月）</div>
+      <div class="timeline">
+        {% for item in roadmap.P3 | default([]) %}
+          <div class="timeline-item">
+            <div class="timeline-label">竞争力构建</div>
+            <div style="font-size: 13px; color: var(--card-foreground);">{{ item }}</div>
+          </div>
+        {% else %}
+          <div class="timeline-item"><div style="font-size: 13px; color: var(--muted-foreground);">暂无数据</div></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 得分预测 -->
+  {% set proj = suggestion.scoreProjection | default({}) %}
+  {% if proj.current is defined %}
+    <div style="margin-top: 24px; padding: 24px; background: var(--muted); border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border);">
+      <div style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 12px;">执行优化后预期得分</div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div class="big-number" style="font-size: 28px; color: var(--muted-foreground);">{{ proj.current | default(0) }}</div>
+          <div style="font-size: 11px; color: var(--muted-foreground);">当前</div>
+        </div>
+        <div style="font-size: 20px; color: var(--muted-foreground);">→</div>
+        <div style="text-align: center;">
+          <div class="big-number" style="font-size: 28px; color: var(--success);">{{ proj.projected | default(0) }}</div>
+          <div style="font-size: 11px; color: var(--muted-foreground);">预期</div>
+        </div>
+        {% if proj.improvement %}
+          <div style="text-align: center;">
+            <div class="big-number" style="font-size: 28px; color: var(--success-soft);">+{{ proj.improvement }}</div>
+            <div style="font-size: 11px; color: var(--muted-foreground);">提升</div>
+          </div>
+        {% endif %}
+      </div>
+      {% set dim_projs = proj.dimensionProjections | default([]) %}
+      {% if dim_projs %}
+        <div style="margin-top: 20px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          {% for dp in dim_projs %}
+            <div style="text-align: center; min-width: 100px; padding: 10px; background: var(--card); border-radius: var(--radius-md); border: 1px solid var(--border);">
+              <div style="font-size: 11px; color: var(--muted-foreground); margin-bottom: 3px;">{{ dp.name | default(dp.code | default('')) }}</div>
+              <div class="num" style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--card-foreground);">{{ dp.current | default(0) }} → {{ dp.projected | default(0) }}</div>
+              <div class="num" style="font-family: var(--font-mono); font-size: 11px; color: var(--success-soft); font-weight: 600;">+{{ dp.improvement | default(0) }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+
+</main>
+
+<!-- ==================== 页脚 ==================== -->
+<footer>
+  <p>GEO 可见度诊断师 · 报告生成时间：{{ meta.diagnosisDate | default(meta.generatedAt | default('')) }}</p>
+  <p style="margin-top: 4px;">本报告由 AI 自动生成，数据仅供参考</p>
+</footer>
+
+</div>
+
+<script>
+/* 进度条动画：页面加载后从 0 填充到目标宽度 */
+(function() {
+  function fillBars() {
+    document.querySelectorAll('.bar-fill[data-width]').forEach(function(el) {
+      var w = el.getAttribute('data-width');
+      var c = el.getAttribute('data-color');
+      if (c) el.style.background = c;
+      requestAnimationFrame(function() {
+        el.style.width = w;
+      });
+    });
+  }
+  if (document.readyState === 'complete') {
+    fillBars();
+  } else {
+    window.addEventListener('load', fillBars);
+  }
+})();
+</script>
+
+</body>
+</html>
