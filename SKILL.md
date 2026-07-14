@@ -173,7 +173,7 @@ This skill will evolve in V2.0 with:
 
 ## Project Info
 
-- **GitHub**: https://github.com/YOUR_USERNAME/geo-visibility-diagnostician
+- **GitHub**: https://github.com/zhongwentuo-creator/geo-visibility-diagnostician
 - **License**: MIT
 - **Built with**: Vibe Coding (11 sub-agents, 9 stages, 10 bugs fixed)
 - **First test score**: 74/100 (Brand: 听力熊)

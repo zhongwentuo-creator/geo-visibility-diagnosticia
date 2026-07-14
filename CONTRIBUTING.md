@@ -27,7 +27,7 @@ Before creating an issue, please:
 ```bash
 # 1. Fork the repository
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/geo-visibility-diagnostician.git
+git clone https://github.com/zhongwentuo-creator/geo-visibility-diagnostician.git
 
 # 3. Create a branch
 git checkout -b feature/your-feature-name
@@ -52,7 +52,7 @@ git push origin feature/your-feature-name
 
 ```bash
 # Clone and setup
-git clone https://github.com/YOUR_USERNAME/geo-visibility-diagnostician.git
+git clone https://github.com/zhongwentuo-creator/geo-visibility-diagnostician.git
 cd geo-visibility-diagnostician
 python -m venv venv
 source venv/bin/activate
