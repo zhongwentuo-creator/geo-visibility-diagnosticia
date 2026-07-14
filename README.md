@@ -123,9 +123,9 @@ geo-visibility-diagnostician/
 │   ├── {brand}_{platform}_diag-report.json
 │   └── {brand}_{platform}_GEO-Diagnosis-Report.html
 ├── docs/                    # Documentation
-│   ├── PRD.md               # Product Requirements Document
 │   ├── IMPLEMENTATION.md    # Vibe Coding Implementation Plan
 │   └── COURSE_GAP_ANALYSIS.md # VibeCoding Course Gap Review
+├── GEO可见度诊断师_V1.0_PRD.md  # Product Requirements Document (V1.0)
 ├── AGENTS.md                # AI Agent working guide
 ├── MEMORY.md                # Project memory (bug fixes, tuning records)
 └── README.zh.md             # Chinese version of this README

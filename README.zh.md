@@ -123,9 +123,9 @@ geo-visibility-diagnostician/
 │   ├── {品牌}_{平台}_diag-report.json
 │   └── {品牌}_{平台}_GEO诊断报告.html
 ├── docs/                    # 文档
-│   ├── PRD.md               # 产品需求文档（中文版）
 │   ├── IMPLEMENTATION.md    # Vibe Coding 实现方案（中文版）
 │   └── COURSE_GAP_ANALYSIS.md # VibeCoding 课程差距评审（中文版）
+├── GEO可见度诊断师_V1.0_PRD.md  # 产品需求文档（V1.0，中文版）
 ├── AGENTS.md                # AI Agent 工作指南
 ├── MEMORY.md                # 项目记忆（Bug 修复、调优记录）
 └── README.md                # 英文版 README

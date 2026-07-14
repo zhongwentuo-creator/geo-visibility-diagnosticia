@@ -269,11 +269,11 @@ jq . output/*/听力熊_豆包_*-diag-report.json | less
 
 - `README.md` — 用户指南（快速开始、使用示例）
 - `MEMORY.md` — 项目记忆（踩坑记录、联调经验、配置规范）⭐ **维护前必读**
-- `GEO可见度诊断师-Agent-PRD.md` — 产品需求文档
+- `GEO可见度诊断师_V1.0_PRD.md` — 产品需求文档（V1.0）
 - `GEO可见度诊断师-VibeCoding-实现方案.md` — 实现方案文档
 
 - `README.md` — 用户指南（快速开始、使用示例）
-- `GEO可见度诊断师-Agent-PRD.md` — 产品需求文档
+- `GEO可见度诊断师_V1.0_PRD.md` — 产品需求文档（V1.0）
 - `GEO可见度诊断师-VibeCoding-实现方案.md` — 实现方案文档
 
 ---

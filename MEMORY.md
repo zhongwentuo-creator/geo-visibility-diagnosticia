@@ -307,3 +307,127 @@ Phase 4（第 4 周）：LangGraph 重构 + 条件边 + 循环决策
 ---
 
 *V1.0 已冻结，等待 V2.0 启动指令。*
+
+---
+
+## V1.0 GitHub 发布经验（2026-07-14）
+
+### 背景
+
+用户希望将 V1.0 Python MVP 发布到 GitHub，并同时创建 Kimi Work Skill。过程中遇到多次 Token 权限和仓库名不匹配问题，最终通过创建新 Classic Token 成功推送。
+
+### 发布流程
+
+```
+项目清理 → 英文文档撰写 → git 初始化 → Token 权限排查 → 仓库名确认 → 推送成功
+```
+
+### 关键踩坑记录
+
+#### Bug 1：Token 权限不足（`403 Permission denied`）
+
+**现象**：首次推送返回 `remote: Permission to ... denied (403)`。
+
+**根因**：用户提供的第一个 Token（`github_pat_...` 开头）是 **Fine-grained PAT**，且该 Token 在 GitHub 账户中已不存在（用户截图显示"No personal access token created"）。
+
+**修复**：在 GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)** 中创建新的 **Classic Token**，勾选 `repo` 权限。
+
+**教训**：
+- GitHub 现在主推 Fine-grained tokens，但 Classic tokens 对 `git push` 更兼容
+- Fine-grained tokens 的权限模型不同，需要单独授权每个仓库
+- 如果用户说"已有 Token"但实际账户中没有，说明 Token 来自另一个账号或已过期
+
+#### Bug 2：仓库名不匹配（`Repository not found`）
+
+**现象**：用户提供的仓库 URL 是 `.../geo-visibility-diagnosticia`（拼写有误），但 git remote 配置的是 `.../geo-visibility-diagnostician`（正确拼写）。
+
+**根因**：用户在 GitHub 上创建仓库时拼写错误，实际仓库名是 `geo-visibility-diagnosticia`（少了一个字母 n）。
+
+**修复**：通过 API 查询用户仓库列表失败（Token 权限不足），最终通过尝试两个名称确认正确的仓库名是 `geo-visibility-diagnosticia`。
+
+**教训**：
+- 推送前务必确认实际仓库名，不能依赖用户记忆或初始命名
+- 可用 `curl https://api.github.com/users/{username}/repos` 查询用户所有公开仓库
+- 如果仓库名不确定，可以逐个尝试
+
+#### Bug 3：API Key 残留在 .env 中
+
+**现象**：项目根目录下存在 `.env` 文件，内含真实的 API Key。
+
+**根因**：开发过程中 `.env` 被创建用于本地调试，但未纳入 `.gitignore` 的排除范围（实际上 `.gitignore` 已包含 `.env`，但文件仍存在于工作目录中）。
+
+**修复**：
+1. 删除 `.env` 文件
+2. 创建 `.env.example` 模板（含注释说明，无真实 Key）
+3. 确认 `.gitignore` 中已包含 `.env`
+
+**教训**：
+- 发布前必须执行 `rm -rf .env venv/ output/ __pycache__/` 清理敏感/临时文件
+- `.env.example` 是标准做法，让其他用户知道需要配置哪些变量
+- 检查 `git status` 确认没有意外提交敏感文件
+
+#### Bug 4：Token 硬编码在命令中
+
+**现象**：在 Bash 命令中直接拼接 Token 到 git remote URL，Token 可能出现在日志中。
+
+**根因**：为了方便推送，直接将 Token 嵌入 `https://TOKEN@github.com/...` 格式的 URL 中。
+
+**修复**：使用 Python 封装 git 命令，在输出前过滤替换 Token 为 `***TOKEN***`；推送完成后立即执行 `git remote set-url origin https://github.com/...` 移除 Token。
+
+**教训**：
+- Token 绝不应出现在任何日志、输出或命令历史中
+- 推送完成后必须立即清理 remote URL 中的 Token
+- 最好的做法是通过 git credential helper 或 SSH key 管理凭证
+
+### 发布检查清单
+
+| 检查项 | 命令/方法 | 通过标准 |
+|--------|----------|---------|
+| 无 .env 文件 | `ls -la` | 不存在 `.env` |
+| 无 venv/ 目录 | `ls -la` | 不存在 `venv/` |
+| 无 output/ 目录 | `ls -la` | 不存在 `output/` |
+| 无 __pycache__/ | `find . -name __pycache__` | 无结果 |
+| .env.example 存在 | `cat .env.example` | 有模板，无真实 Key |
+| .gitignore 正确 | `cat .gitignore` | 包含 `.env` `venv/` `output/` |
+| git remote 无 Token | `git remote -v` | URL 中无 Token 字符串 |
+| README 英文版本 | `head README.md` | 英文为主 |
+| LICENSE 存在 | `ls LICENSE` | MIT License |
+| CHANGELOG 存在 | `ls CHANGELOG.md` | 含 V1.0 冻结说明 |
+
+### GitHub 推送速查
+
+```bash
+# 1. 清理项目
+rm -rf .env venv/ output/ __pycache__/ .DS_Store
+
+# 2. 创建 .env.example
+cat > .env.example << 'EOF'
+KIMI_API_KEY=sk-your-key
+DOUBAO_API_KEY=ark-your-key
+EOF
+
+# 3. 初始化 git（如未初始化）
+git init
+git add .
+git commit -m "v1.0: initial release"
+
+# 4. 设置 remote
+git remote add origin https://github.com/USERNAME/REPO.git
+
+# 5. 推送（在 GitHub 网页创建仓库后）
+git branch -M main
+git push -u origin main
+```
+
+### 如果推送失败排查
+
+| 错误信息 | 原因 | 解决 |
+|---------|------|------|
+| `Repository not found` | 仓库名错误或仓库不存在 | 确认 GitHub 上的实际仓库名 |
+| `Permission denied (403)` | Token 无 `repo` 权限 | 创建新的 Classic Token，勾选 `repo` |
+| `Authentication failed` | Token 已过期或被撤销 | 去 https://github.com/settings/tokens 生成新 Token |
+| `Could not resolve host` | 网络问题 | 检查网络连接，或稍后重试 |
+
+---
+
+*发布日期：2026-07-14 | 仓库：https://github.com/zhongwentuo-creator/geo-visibility-diagnosticia*
