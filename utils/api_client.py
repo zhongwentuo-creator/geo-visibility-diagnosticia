@@ -25,9 +25,15 @@ def _get_openai_key() -> str:
 
 def _get_openai_url() -> str:
     """读取 OpenAI Base URL，同时兼容 Kimi URL 作为 fallback。"""
-    return os.environ.get("OPENAI_BASE_URL") or os.environ.get(
-        "KIMI_API_URL", "https://api.openai.com/v1"
-    )
+    openai_url = os.environ.get("OPENAI_BASE_URL")
+    if openai_url:
+        return openai_url
+    kimi_url = os.environ.get("KIMI_API_URL")
+    if kimi_url:
+        return kimi_url
+    if os.environ.get("KIMI_API_KEY") and not os.environ.get("OPENAI_API_KEY"):
+        return "https://api.moonshot.cn/v1"
+    return "https://api.openai.com/v1"
 
 def _get_doubao_key() -> str:
     return os.environ.get("DOUBAO_API_KEY", "")

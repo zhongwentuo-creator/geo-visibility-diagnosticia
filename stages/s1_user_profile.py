@@ -28,14 +28,43 @@ import httpx
 DEFAULT_TIMEOUT: float = 30.0
 """HTTP 请求默认超时（秒）"""
 
-LLM_API_URL: str = os.environ.get("LLM_API_URL", "https://api.openai.com/v1/chat/completions")
-"""LLM API 端点，默认 OpenAI；可通过环境变量覆盖"""
+KIMI_CHAT_URL = "https://api.moonshot.cn/v1/chat/completions"
+OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 
-LLM_API_KEY: str | None = os.environ.get("OPENAI_API_KEY")
-"""LLM API Key，从环境变量读取，文件中不硬编码"""
 
-LLM_MODEL: str = os.environ.get("LLM_MODEL", "gpt-4o")
-"""默认 LLM 模型，可通过环境变量覆盖"""
+def _chat_url(url: str) -> str:
+    """兼容 Base URL 与完整 Chat Completions 端点。"""
+    normalized = url.rstrip("/")
+    if normalized.endswith("/chat/completions"):
+        return normalized
+    return f"{normalized}/chat/completions"
+
+
+def _resolve_llm_config() -> tuple[str, str | None, str]:
+    """解析 Stage 1 的 LLM 配置，项目默认优先使用 Kimi。"""
+    kimi_key = os.environ.get("KIMI_API_KEY")
+    if kimi_key:
+        return (
+            _chat_url(
+                os.environ.get("LLM_API_URL")
+                or os.environ.get("KIMI_API_URL")
+                or KIMI_CHAT_URL
+            ),
+            kimi_key,
+            os.environ.get("LLM_MODEL")
+            or os.environ.get("KIMI_MODEL")
+            or "moonshot-v1-8k",
+        )
+
+    return (
+        _chat_url(os.environ.get("LLM_API_URL") or OPENAI_CHAT_URL),
+        os.environ.get("OPENAI_API_KEY"),
+        os.environ.get("LLM_MODEL", "gpt-4o"),
+    )
+
+
+LLM_API_URL, LLM_API_KEY, LLM_MODEL = _resolve_llm_config()
+"""LLM 端点、密钥与模型；生产环境只从环境变量读取密钥。"""
 
 DEFAULT_QUERIES_PER_SEGMENT: int = 6
 """每类用户默认生成的查询数量"""
