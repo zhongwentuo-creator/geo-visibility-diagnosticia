@@ -20,6 +20,9 @@ const sampleDimensions = [
 let isRunning = false;
 let eventSource = null;
 let activeTaskId = null;
+let recoveryTimer = null;
+let recoveryInFlight = false;
+let completedStages = new Set();
 
 function getEl(id) { return document.getElementById(id); }
 
@@ -94,6 +97,7 @@ function resetWorkspace() {
   closeStream();
   isRunning = false;
   activeTaskId = null;
+  completedStages = new Set();
   getEl('conversation').replaceChildren();
   getEl('welcome-panel').classList.remove('hidden');
   getEl('app-shell').classList.remove('is-conversation-active');
@@ -153,6 +157,7 @@ async function startDiagnosis(event) {
 function prepareRun(form) {
   closeStream();
   isRunning = true;
+  completedStages = new Set();
   getEl('welcome-panel').classList.add('hidden');
   getEl('conversation').replaceChildren();
   getEl('app-shell').classList.add('is-conversation-active');
@@ -168,18 +173,24 @@ function prepareRun(form) {
 
 function connectStream(taskId) {
   eventSource = new EventSource(`${API_BASE}/api/diagnose/${encodeURIComponent(taskId)}/stream`);
+  eventSource.onopen = () => {
+    clearRecoveryTimer();
+    if (isRunning) setConnection('实时连接正常', 'is-running');
+  };
   eventSource.addEventListener('start', (event) => {
     const data = JSON.parse(event.data);
     setMessage(`已连接，正在诊断「${data.brand}」。`);
   });
   eventSource.addEventListener('stage_start', (event) => onStageStart(JSON.parse(event.data)));
   eventSource.addEventListener('stage_complete', (event) => onStageComplete(JSON.parse(event.data)));
+  eventSource.addEventListener('search_progress', (event) => onSearchProgress(JSON.parse(event.data)));
+  eventSource.addEventListener('heartbeat', (event) => onHeartbeat(JSON.parse(event.data)));
   eventSource.addEventListener('complete', (event) => onComplete(JSON.parse(event.data)));
   eventSource.addEventListener('error', (event) => {
     if (event.data) {
       onStreamError(JSON.parse(event.data));
     } else if (isRunning) {
-      finishWithError('实时连接中断。诊断可能仍在后台继续，请重新发起一次诊断。');
+      recoverTaskStatus();
     }
   });
 }
@@ -249,20 +260,41 @@ function onStageStart(data) {
     trace.innerHTML = `<span class="trace-symbol"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i></span><div><h3>阶段 ${data.stage}/${TOTAL_STAGES} · ${escapeHtml(data.name)}</h3><p class="stage-summary">正在执行诊断…</p></div><span class="stage-meta">运行中</span>`;
     getAssistantTurn().appendChild(trace);
   }
-  updateProgress(data.stage - 1);
+  updateProgress(completedStages.size);
   scrollConversation();
 }
 
 function onStageComplete(data) {
+  if (!getEl(`stage-${data.stage}`)) onStageStart(data);
   const trace = getEl(`stage-${data.stage}`);
-  if (!trace) return;
   trace.classList.remove('is-running');
   trace.classList.add('is-complete');
   trace.querySelector('.trace-symbol').innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
   trace.querySelector('.stage-summary').textContent = data.summary || '阶段已完成';
   trace.querySelector('.stage-meta').textContent = data.elapsed_ms ? `${Math.round(data.elapsed_ms / 100) / 10}s` : '完成';
-  updateProgress(data.stage);
+  completedStages.add(data.stage);
+  updateProgress(completedStages.size);
   scrollConversation();
+}
+
+function onSearchProgress(data) {
+  const trace = getEl('stage-4');
+  if (!trace) return;
+  const summary = `已完成 ${data.completed}/${data.total} 条 AI 搜索查询`;
+  trace.querySelector('.stage-summary').textContent = summary;
+  trace.querySelector('.stage-meta').textContent = `${data.completed}/${data.total}`;
+  setMessage(`正在执行 AI 搜索测试：${summary}。`);
+  scrollConversation();
+}
+
+function onHeartbeat(data) {
+  if (!isRunning) return;
+  const search = data.search_progress;
+  const summary = search
+    ? `AI 搜索仍在运行：已完成 ${search.completed}/${search.total} 条查询。`
+    : data.message || '诊断仍在运行，连接保持正常。';
+  setConnection('实时连接正常', 'is-running');
+  setMessage(summary);
 }
 
 function updateProgress(completed) {
@@ -308,6 +340,46 @@ function appendReport(data, report) {
   window.setTimeout(() => card.querySelectorAll('.dimension-track span').forEach((bar) => { bar.style.width = bar.style.getPropertyValue('--score'); }), 80);
 }
 
+async function recoverTaskStatus() {
+  if (!activeTaskId || !isRunning || recoveryInFlight) return;
+  recoveryInFlight = true;
+  setConnection('正在恢复连接', 'is-running');
+  setMessage('实时连接短暂中断，诊断仍在后台继续，正在恢复状态…');
+  try {
+    const response = await fetch(`${API_BASE}/api/diagnose/${encodeURIComponent(activeTaskId)}`);
+    if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+    const task = await response.json();
+    (task.stages || []).forEach((stage) => onStageComplete(stage));
+    if (task.search_progress) onSearchProgress(task.search_progress);
+    if (task.status === 'success') {
+      await onComplete({ aivo_score: task.aivo_score, grade: '已完成' });
+      return;
+    }
+    if (task.status === 'error') {
+      onStreamError({ message: '后台诊断未完成。', error: task.error });
+      return;
+    }
+    scheduleStatusRecovery();
+  } catch (_) {
+    scheduleStatusRecovery();
+  } finally {
+    recoveryInFlight = false;
+  }
+}
+
+function scheduleStatusRecovery() {
+  if (recoveryTimer || !isRunning) return;
+  recoveryTimer = window.setTimeout(() => {
+    recoveryTimer = null;
+    recoverTaskStatus();
+  }, 5000);
+}
+
+function clearRecoveryTimer() {
+  if (recoveryTimer) window.clearTimeout(recoveryTimer);
+  recoveryTimer = null;
+}
+
 function normalizeDimensions(aivo) {
   const raw = aivo?.dimensions || aivo?.dimensionScores;
   if (Array.isArray(raw)) return raw.slice(0, 4).map((item, index) => ({ name: item.name || item.label || sampleDimensions[index]?.name || '诊断维度', score: Number(item.score ?? item.value ?? 0) }));
@@ -336,7 +408,10 @@ function openReport(type) {
   window.open(`${API_BASE}/api/diagnose/${encodeURIComponent(activeTaskId)}${suffix}`, '_blank', 'noopener');
 }
 
-function closeStream() { if (eventSource) { eventSource.close(); eventSource = null; } }
+function closeStream() {
+  clearRecoveryTimer();
+  if (eventSource) { eventSource.close(); eventSource = null; }
+}
 function scrollConversation() { window.setTimeout(() => getEl('scroll-region').scrollTo({ top: getEl('scroll-region').scrollHeight, behavior: 'smooth' }), 0); }
 function showHelp() { getEl('help-modal').showModal(); }
 function closeHelp() { getEl('help-modal').close(); }

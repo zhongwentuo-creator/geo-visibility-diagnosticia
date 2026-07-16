@@ -18,6 +18,7 @@ from typing import Any
 
 StageStartCallback = Callable[[int], Awaitable[None]]
 StageCompleteCallback = Callable[[int, dict[str, Any], int, str], Awaitable[None]]
+SearchProgressCallback = Callable[[int, int], Awaitable[None]]
 
 _engine_lock = asyncio.Lock()
 
@@ -52,6 +53,7 @@ async def diagnose_with_progress(
     platform: str,
     on_stage_start: StageStartCallback,
     on_stage_complete: StageCompleteCallback,
+    on_search_progress: SearchProgressCallback | None = None,
 ) -> dict[str, Any]:
     """运行 V1.0 诊断，并兼容有、无 ``progress_callback`` 的两个引擎版本。"""
     async with _engine_lock:
@@ -71,13 +73,16 @@ async def diagnose_with_progress(
                     await on_stage_start(stage)
                 await on_stage_complete(stage, result, elapsed_ms, status)
 
-            return await diagnose(
-                brand=brand,
-                category=category,
-                website=website,
-                platform=platform,
-                progress_callback=bridged_progress,
-            )
+            diagnose_kwargs: dict[str, Any] = {
+                "brand": brand,
+                "category": category,
+                "website": website,
+                "platform": platform,
+                "progress_callback": bridged_progress,
+            }
+            if on_search_progress and "search_progress_callback" in inspect.signature(diagnose).parameters:
+                diagnose_kwargs["search_progress_callback"] = on_search_progress
+            return await diagnose(**diagnose_kwargs)
 
         originals = _instrument_legacy_engine(engine_main, on_stage_start, on_stage_complete)
         try:

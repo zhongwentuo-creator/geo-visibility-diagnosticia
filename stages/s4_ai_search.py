@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -51,6 +52,8 @@ _PLATFORM_MODELS: dict[str, str] = {
 
 # 并发控制默认值
 _MAX_CONCURRENT: int = int(os.environ.get("GEO_MAX_CONCURRENT_SEARCHES", "3"))
+
+SearchProgressCallback = Callable[[int, int], Awaitable[None]]
 
 # ---------------------------------------------------------------------------
 # 情感关键词词典（可随业务扩展）
@@ -211,6 +214,7 @@ async def test(
     queries: list[dict[str, Any] | str],
     competitors: list[dict[str, Any]],
     platform: str = "doubao",
+    progress_callback: SearchProgressCallback | None = None,
 ) -> dict[str, Any]:
     """对一组搜索 Query 在目标 AI 平台上执行搜索测试，记录品牌提及情况.
 
@@ -220,6 +224,7 @@ async def test(
             或包含 ``"text"`` / ``"intent"`` 的字典。
         competitors: 竞品列表，每个元素需至少包含 ``"name"`` 键。
         platform: 目标搜索平台，可选 ``"doubao"`` | ``"chatgpt"`` | ``"perplexity"``。
+        progress_callback: 每条 Query 完成后调用，参数为 ``(已完成数, 总数)``。
 
     Returns:
         结构化测试结果字典，包含平台、提及率、首段提及率、
@@ -236,12 +241,26 @@ async def test(
     ]
 
     semaphore = asyncio.Semaphore(_MAX_CONCURRENT)
+    progress_lock = asyncio.Lock()
+    completed_queries = 0
 
     async def _search_one(query: dict[str, Any]) -> dict[str, Any]:
+        nonlocal completed_queries
         async with semaphore:
-            return await _execute_single_search(
-                brand, query, competitor_names, platform
-            )
+            try:
+                return await _execute_single_search(
+                    brand, query, competitor_names, platform
+                )
+            finally:
+                if progress_callback:
+                    async with progress_lock:
+                        completed_queries += 1
+                        completed = completed_queries
+                    try:
+                        await progress_callback(completed, total)
+                    except Exception:
+                        # 观测回调不能影响真实诊断与降级逻辑。
+                        pass
 
     results = await asyncio.gather(
         *[_search_one(q) for q in normalized_queries],
