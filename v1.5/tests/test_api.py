@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib
 import os
 import sys
@@ -41,11 +42,39 @@ class DiagnosisApiTest(unittest.TestCase):
         self.assertIn("event: start", payload)
         self.assertEqual(payload.count("event: stage_start"), 9)
         self.assertEqual(payload.count("event: stage_complete"), 9)
+        self.assertEqual(payload.count("event: search_progress"), 6)
         self.assertIn("event: complete", payload)
         self.assertLess(payload.index("event: start"), payload.index("event: complete"))
         self.assertEqual(self.client.get(f"/api/diagnose/{task_id}").json()["status"], "success")
         self.assertEqual(self.client.get(f"/api/diagnose/{task_id}/report").json()["aivoScore"]["total"], 74)
         self.assertEqual(self.client.get(f"/api/diagnose/{task_id}/report/html").status_code, 200)
+
+    def test_status_exposes_stage_four_query_progress(self) -> None:
+        task_id = self._start()
+        with self.client.stream("GET", f"/api/diagnose/{task_id}/stream") as response:
+            _ = "".join(response.iter_text())
+        status = self.client.get(f"/api/diagnose/{task_id}").json()
+        self.assertEqual(status["search_progress"], {"completed": 6, "total": 6})
+
+    def test_sse_keeps_connection_alive_during_a_slow_stage(self) -> None:
+        original_interval = api.SSE_HEARTBEAT_SECONDS
+        api.SSE_HEARTBEAT_SECONDS = 0.01
+        try:
+            async def collect_events() -> list[str]:
+                response = await api.start_diagnosis(api.DiagnoseRequest(
+                    brand="慢品牌", category="儿童 AI 对话智能体"
+                ))
+                queue = api._tasks[response["task_id"]]["queue"]
+                events: list[str] = []
+                while (event := await queue.get()) is not None:
+                    events.append(event["event"])
+                return events
+
+            events = asyncio.run(collect_events())
+        finally:
+            api.SSE_HEARTBEAT_SECONDS = original_interval
+        self.assertIn("heartbeat", events)
+        self.assertIn("complete", events)
 
     def test_engine_error_is_reported_without_a_broken_stream(self) -> None:
         task_id = self._start("错误品牌")

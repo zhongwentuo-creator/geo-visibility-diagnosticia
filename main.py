@@ -18,7 +18,7 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
 
 # 先加载配置（确保 .env 被读取到 os.environ）
 from config import Settings
@@ -87,6 +87,8 @@ async def diagnose(
     category: str,
     website: str | None = None,
     platform: str = "doubao",
+    progress_callback: Optional[Callable[[int, dict, int, str], Any]] = None,
+    search_progress_callback: Optional[Callable[[int, int], Any]] = None,
 ) -> dict[str, Any]:
     """GEO 可见度诊断主函数：8 阶段流水线编排。
 
@@ -104,6 +106,8 @@ async def diagnose(
         category: 产品类型。
         website: 官网地址（可选）。
         platform: 诊断平台，可选 ``"doubao"`` / ``"chatgpt"`` / ``"perplexity"``。
+        progress_callback: 阶段完成回调函数，签名为 ``callback(stage, result, elapsed_ms, status)``。
+        search_progress_callback: Stage 4 单条 Query 完成回调，签名为 ``callback(completed, total)``。
 
     Returns:
         包含 ``report``（完整报告字典）、``jsonPath``、``htmlPath`` 的字典。
@@ -120,6 +124,8 @@ async def diagnose(
         status="success",
         record_count=user_profile.get("totalQueries", 0),
     )
+    if progress_callback:
+        await progress_callback(1, user_profile, stage1_meta["elapsedMs"], stage1_meta["stageStatus"])
     queries = _extract_queries(user_profile)
 
     # ── Stage 2 & 3：基建评估 + 竞品分析（并行）───────────
@@ -170,11 +176,21 @@ async def diagnose(
             record_count=competitors_data.get("recordCount", 0),
         )
 
+    if progress_callback:
+        await progress_callback(2, infra_eval, stage2_meta["elapsedMs"], stage2_meta["stageStatus"])
+        await progress_callback(3, competitors_data, stage3_meta["elapsedMs"], stage3_meta["stageStatus"])
+
     competitors_list: list[dict[str, Any]] = competitors_data.get("competitors", [])
 
     # ── Stage 4：AI 搜索测试 ──────────────────────────────
     t0 = time.perf_counter()
-    ai_search = await s4.test(brand, queries, competitors_list, platform)
+    ai_search = await s4.test(
+        brand,
+        queries,
+        competitors_list,
+        platform,
+        progress_callback=search_progress_callback,
+    )
     stage4_meta = _stage_meta(
         elapsed_ms=round((time.perf_counter() - t0) * 1000),
         status="success",
@@ -182,6 +198,9 @@ async def diagnose(
     )
 
     # ── Stage 5 & 6：GEO 效果汇总 + 舆情扫描（并行）───────
+    if progress_callback:
+        await progress_callback(4, ai_search, stage4_meta["elapsedMs"], stage4_meta["stageStatus"])
+
     t0 = time.perf_counter()
     geo_effect_raw, sentiment_raw = await asyncio.gather(
         asyncio.to_thread(s5.summarize, ai_search, competitors_list),
@@ -230,6 +249,10 @@ async def diagnose(
             record_count=sentiment.get("recordCount", 0),
         )
 
+    if progress_callback:
+        await progress_callback(5, geo_effect, stage5_meta["elapsedMs"], stage5_meta["stageStatus"])
+        await progress_callback(6, sentiment, stage6_meta["elapsedMs"], stage6_meta["stageStatus"])
+
     # ── Stage 7：综合总览 ────────────────────────────────
     t0 = time.perf_counter()
     overview = s7.generate(user_profile, infra_eval, geo_effect, sentiment)
@@ -238,6 +261,9 @@ async def diagnose(
         status=overview.get("stageStatus", "success"),
         record_count=len(overview.get("highlights", [])) + len(overview.get("risks", [])),
     )
+
+    if progress_callback:
+        await progress_callback(7, overview, stage7_meta["elapsedMs"], stage7_meta["stageStatus"])
 
     # ── Stage 8：AIVO 评分 ────────────────────────────────
     t0 = time.perf_counter()
@@ -248,6 +274,9 @@ async def diagnose(
         record_count=4,  # 4 个维度
     )
 
+    if progress_callback:
+        await progress_callback(8, aivo_score, stage8_meta["elapsedMs"], stage8_meta["stageStatus"])
+
     # ── Stage 9：建议系统 ──────────────────────────────────
     t0 = time.perf_counter()
     suggestions = s9.generate(aivo_score, infra_eval, sentiment)
@@ -256,6 +285,9 @@ async def diagnose(
         status="success" if "error" not in suggestions else "degraded",
         record_count=len(suggestions.get("suggestions", [])),
     )
+
+    if progress_callback:
+        await progress_callback(9, suggestions, stage9_meta["elapsedMs"], stage9_meta["stageStatus"])
 
     # ── 合并最终报告 ───────────────────────────────────────
     report: dict[str, Any] = {

@@ -40,6 +40,25 @@
 | 配置后健康检查 | https://geo-visibility-diagnosis-v15.onrender.com/health 返回 `{"status":"ok","version":"1.5.0"}`。 |
 | 节点结论 | 生产配置已完成；尚未以真实品牌验证外部 API 是否成功返回诊断数据。 |
 
-## 下一节点
+## 节点 4：真实品牌公网完整诊断
 
-节点 4：用真实品牌在公网执行完整诊断，保存任务标识与 SSE、JSON、HTML 报告证据；任何 Key 或请求认证信息不得写入记录。
+| 字段 | 已验证数据 |
+|---|---|
+| 首次执行日期 | 2026-07-16 |
+| 公网服务 | https://geo-visibility-diagnosis-v15.onrender.com |
+| 品牌 / 产品 / 平台 | 听力熊 / 儿童 AI 对话智能体 / doubao |
+| 官网 | https://www.tinglexiong.com |
+| 首次任务 ID | `GEO-20260716-151348-5d5384` |
+| 后台任务结果 | `success`；9 个阶段均完成 |
+| 关键业务结果 | AIVO 81（良好）；18 条查询；品牌提及率 94.4% |
+| 主要阶段耗时 | Stage 1：18.500 秒；Stage 2：4.478 秒；Stage 3：1.663 秒；Stage 4：113.082 秒；Stage 6：2.111 秒 |
+| SSE 结果 | 未通过。客户端在 Stage 4 开始后提前结束；后台任务随后成功完成。 |
+| JSON 报告 | HTTP 200；`application/json`；31,803 字节 |
+| HTML 报告 | HTTP 200；`text/html`；52,387 字节 |
+| 根因判断 | Stage 4 长时间没有中间事件，连接可能在代理/客户端侧被关闭；前端把原生 EventSource 断线当作任务失败。 |
+| 修复记录 | PR #5 / commit `7a79b48`；增加 heartbeat、Stage 4 查询进度、唯一完成阶段计数和前端状态恢复；代码与 CI 已通过，尚未部署。 |
+| 当前结论 | 节点 4 部分通过、仍在进行中；JSON/HTML 通过，完整 SSE 待修复部署后复测。 |
+
+## 下一步
+
+经用户确认后合并 PR #5，等待 Render 部署完成，再按 `NODE4_EXECUTION.md` 只执行一次新的真实品牌诊断并同步回填验收证据。任何 Key、Token、cookie 或请求认证信息不得写入记录。

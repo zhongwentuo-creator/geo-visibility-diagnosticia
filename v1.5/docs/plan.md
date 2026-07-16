@@ -1,6 +1,6 @@
 # V1.5 交付计划与验收状态
 
-> 更新：2026-07-16。此文件是 V1.5 的唯一任务状态来源；旧 `handoff_v1.5.md` 仅作历史交接，不再表示当前完成度。
+> 更新：2026-07-17。此文件是 V1.5 的唯一任务状态来源；旧 `handoff_v1.5.md` 仅作历史交接，不再表示当前完成度。
 
 ## 发布目标
 
@@ -19,11 +19,14 @@
 - [x] Render Docker Web Service：通过 `v1.5/render.yaml` 创建 `geo-visibility-diagnosis-v15`（Free / Singapore）；公网 `/health` 已返回 `{"status":"ok","version":"1.5.0"}`。详见 `PROJECT_NODE_RECORDS.md`。
 - [x] Render 生产配置：已选择 Kimi + 豆包并配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`、`CORS_ALLOW_ORIGINS`、`KIMI_API_URL`、`KIMI_MODEL`；PR #3（merge commit `2a21e8d`）确保 Kimi-only 配置路由至 Moonshot。密钥值不进入仓库。详见 `PROJECT_NODE_RECORDS.md`。
 
+## 进行中
+
+- [ ] 节点 4：用真实品牌完成公网 SSE、JSON、HTML 验收。首次任务已确认后台 9 阶段成功，JSON/HTML 通过，但 SSE 在 Stage 4 长耗时期间提前结束；修复已进入 PR #5，等待合并部署后复测。当前行动见 `NODE4_EXECUTION.md`。
+
 ## 待完成的发布门禁
 
-- [ ] 获得公网 URL 后，用真实品牌完成一次带有效密钥的 SSE、JSON、HTML 报告验收。
 - [ ] 用外网桌面端、手机各走一遍；24 小时后复测一次。
 
 ## 验收结论
 
-当前状态为 **公网服务与生产配置已就绪、待生产诊断验收**。真实品牌诊断、跨设备走查与 24 小时稳定性仍未完成。
+当前状态为 **节点 4 进行中**。真实品牌诊断已证明后台和 JSON/HTML 报告链路可用，但完整 SSE 尚未通过；修复部署后的公网复测、跨设备走查与 24 小时稳定性仍未完成。

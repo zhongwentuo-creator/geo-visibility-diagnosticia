@@ -1,5 +1,7 @@
 # GEO 可见度诊断师 V1.0
 
+> 本文件是 V1.0 中文使用说明，不表示 V1.5 当前发布状态。V1.5 导航见 [V1.5 README](v1.5/README.md)；节点 4 当前行动见 [NODE4_EXECUTION.md](v1.5/docs/NODE4_EXECUTION.md)。
+
 > 帮助品牌量化自己在 AI 原生时代的"数字存在感"，并提供可执行的优化路径。
 > 
 > **版本**：V1.0（已冻结） | **状态**：Python MVP 已联调 | **V2.0 方向**：MCP + LangGraph

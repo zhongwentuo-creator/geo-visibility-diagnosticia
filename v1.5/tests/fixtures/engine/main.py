@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -10,6 +11,7 @@ async def diagnose(
     website: str | None = None,
     platform: str = "doubao",
     progress_callback: Callable[[int, dict[str, Any], int, str], Awaitable[None]] | None = None,
+    search_progress_callback: Callable[[int, int], Awaitable[None]] | None = None,
 ) -> dict[str, Any]:
     if brand == "错误品牌":
         raise RuntimeError("测试引擎故障")
@@ -26,6 +28,11 @@ async def diagnose(
             8: {"total": 74, "grade": "中等"},
             9: {"suggestions": [{"title": "优化官网"}]},
         }[stage]
+        if brand == "慢品牌" and stage == 4:
+            await asyncio.sleep(0.03)
+        if stage == 4 and search_progress_callback:
+            for completed in range(1, 7):
+                await search_progress_callback(completed, 6)
         if progress_callback:
             await progress_callback(stage, result, stage * 100, "success")
 

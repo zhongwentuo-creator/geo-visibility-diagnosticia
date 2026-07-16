@@ -12,6 +12,7 @@
 - `AGENTS.md`：协作规则、版本边界、验证和发布门禁；不重复完整 PRD。
 - `MEMORY.md`：已确认的决策、路径、验证结论与踩坑；不记录密钥，也不复制长篇规格。
 - `v1.5/docs/plan.md`：V1.5 唯一任务状态来源；`v1.5/docs/ACCEPTANCE.md`：验收证据来源。
+- `v1.5/docs/NODE4_EXECUTION.md`：节点 4 当前行动、复测顺序和跨对话交接入口；不替代计划或验收结论。
 - `v1.5/docs/PROJECT_NODE_RECORDS.md`：发布节点的非敏感运行数据（URL、配置选择、时间、健康检查与证据链接）；不替代验收结论。
 - `docs/VIBECODING_ACCEPTANCE_MATRIX.md`：从 VibeCoding 达成目录抽取的 V1.5 总验收矩阵。
 
@@ -28,6 +29,13 @@
 3. 涉及 V1.5 的代码变更至少运行对应 pytest；部署相关变更还需验证 CI、Render 和公网诊断。
 4. 每完成一个发布门禁，在 `v1.5/docs/plan.md`、`v1.5/docs/ACCEPTANCE.md`、`v1.5/docs/PROJECT_NODE_RECORDS.md` 和 VibeCoding 验收矩阵中回填同一份证据。
 5. 用功能分支和 PR 进入 `main`；不得把“已推送分支”写成“已上线”。
+
+### 0.4 节点 4 协作约定
+
+- 继续节点 4 时，先读本文件第 0 节、`MEMORY.md` 的“当前有效事实”和 `v1.5/docs/NODE4_EXECUTION.md`，不要默认重扫整个仓库或重复已完成的生产诊断。
+- 当前行动和临时 PR/部署状态写入 `NODE4_EXECUTION.md`；稳定根因与决策写入 `MEMORY.md`；任务状态、验收结论和运行数据仍分别写入其唯一来源。
+- SSE 断线时先查询已有任务状态，不立即创建新任务；只有确认 Render 已部署目标提交后才发起新的真实品牌付费诊断。
+- 节点 4 未同时获得完整 SSE、JSON 和 HTML 证据前，保持“进行中/待验收”。
 
 ---
 

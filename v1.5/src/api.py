@@ -56,6 +56,7 @@ app.mount("/js", StaticFiles(directory=_static_dir / "js"), name="js")
 # ═══════════════════════════════════════════════════════════════
 
 _tasks: dict[str, dict[str, Any]] = {}
+SSE_HEARTBEAT_SECONDS = max(5, int(os.getenv("SSE_HEARTBEAT_SECONDS", "15")))
 
 # 阶段名称映射
 _STAGE_NAMES: dict[int, str] = {
@@ -102,6 +103,7 @@ class TaskStatusResponse(BaseModel):
     stages: list[dict[str, Any]]
     aivo_score: Optional[int] = None
     error: Optional[str] = None
+    search_progress: Optional[dict[str, int]] = None
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -163,7 +165,7 @@ async def _run_diagnosis(
 
     事件序列：
         start → stage_start(1) → stage_complete(1) → ... → stage_complete(9) → complete
-        （任一阶段失败时穿插 error 事件，但不中断 SSE 流）
+        运行时间较长时会穿插 heartbeat；Stage 4 还会发送 search_progress。
     """
     task = _tasks[task_id]
     queue: asyncio.Queue = task["queue"]
@@ -172,6 +174,18 @@ async def _run_diagnosis(
     # ── 辅助：发送 SSE 事件到队列 ──
     async def _emit(event: str, data: dict[str, Any]) -> None:
         await queue.put({"event": event, "data": data})
+
+    async def _emit_heartbeats() -> None:
+        while task["status"] == "running":
+            await asyncio.sleep(SSE_HEARTBEAT_SECONDS)
+            if task["status"] != "running":
+                return
+            await _emit("heartbeat", {
+                "task_id": task_id,
+                "progress": task["progress"],
+                "search_progress": task.get("search_progress"),
+                "message": "诊断仍在运行，连接保持正常。",
+            })
 
     # ── 辅助：progress_callback，由 main.diagnose() 调用 ──
     async def _on_stage(
@@ -189,10 +203,10 @@ async def _run_diagnosis(
             "summary": summary,
         }
         task["stages"].append(stage_data)
-        task["progress"] = round(stage / 9.0, 2)
         await _emit("stage_complete", stage_data)
 
         completed = {item["stage"] for item in task["stages"]}
+        task["progress"] = round(len(completed) / 9.0, 2)
         # V1.0 仅在阶段完成时回调；V1.5 据其固定依赖图及时发出后续阶段开始事件。
         dependencies = {
             2: {1}, 3: {1}, 4: {2, 3}, 5: {4}, 6: {4},
@@ -207,6 +221,15 @@ async def _run_diagnosis(
                     "status": "running",
                 })
 
+    async def _on_search_progress(completed: int, total: int) -> None:
+        progress = {"completed": completed, "total": total}
+        task["search_progress"] = progress
+        await _emit("search_progress", {
+            "task_id": task_id,
+            "stage": 4,
+            **progress,
+        })
+
     # ── 发送诊断开始事件 ──
     await _emit("start", {
         "task_id": task_id,
@@ -220,6 +243,7 @@ async def _run_diagnosis(
         "name": _STAGE_NAMES[1],
         "status": "running",
     })
+    heartbeat_task = asyncio.create_task(_emit_heartbeats())
 
     # ── 启动 diagnose() 作为后台协程 ──
     try:
@@ -235,6 +259,7 @@ async def _run_diagnosis(
             platform=platform,
             on_stage_start=_on_engine_stage_start,
             on_stage_complete=_on_stage,
+            on_search_progress=_on_search_progress,
         )
 
         # ── 发送完成事件 ──
@@ -268,6 +293,11 @@ async def _run_diagnosis(
         })
 
     finally:
+        heartbeat_task.cancel()
+        try:
+            await heartbeat_task
+        except asyncio.CancelledError:
+            pass
         # ── 发送结束标记（SSE 关闭信号）──
         await queue.put(None)
 
@@ -297,6 +327,7 @@ async def start_diagnosis(request: DiagnoseRequest) -> dict[str, Any]:
         "result": None,
         "error": None,
         "aivo_score": None,
+        "search_progress": None,
         "queue": asyncio.Queue(),
         "created_at": datetime.now().isoformat(),
     }
@@ -331,6 +362,7 @@ async def get_diagnosis(task_id: str) -> dict[str, Any]:
         "stages": task["stages"],
         "aivo_score": task.get("aivo_score"),
         "error": task.get("error"),
+        "search_progress": task.get("search_progress"),
     }
 
 
@@ -342,6 +374,8 @@ async def stream_diagnosis(task_id: str) -> StreamingResponse:
         - start: 诊断开始
         - stage_start: 某阶段开始
         - stage_complete: 某阶段完成（含结果摘要）
+        - search_progress: Stage 4 的单条 Query 完成进度
+        - heartbeat: 长耗时阶段的连接保活事件
         - complete: 全部完成（含 AIVO 分数）
         - error: 发生错误（含降级信息）
     """
