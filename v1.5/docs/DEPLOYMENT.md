@@ -2,9 +2,9 @@
 
 ## 引擎来源
 
-运行时使用项目内的 `../GEO可见度诊断师_v1.0引擎/v1.0/src`。该版本已包含
-9 个阶段的 `progress_callback`，是 V1.5 SSE 的真实事件来源；GitHub 仓库仅用于
-核对历史来源，不作为当前部署镜像的引擎输入。
+生产运行时使用同一 GitHub 仓库根目录中的 V1.0 引擎（`main.py`、`config.py`、
+`stages/`、`report/`、`utils/`）。该引擎已包含 9 个阶段的 `progress_callback`，
+是 V1.5 SSE 的真实事件来源；Dockerfile 会在构建镜像时将它复制到 `/app/engine`。
 
 ## 本地启动
 
@@ -33,8 +33,8 @@ docker run --rm -p 8000:8000 \
 ```
 
 `render.yaml` 假定 Git 仓库根目录保留 V1.0 引擎，V1.5 位于 `v1.5/`：Docker 上下文为 `.`，
-并同时监听 Web 层与引擎的改动。发布时将 `.dockerignore.root` 复制为仓库根目录的
-`.dockerignore`。部署时在 Render Dashboard 配置 API Key；不要提交 `.env`。
+并同时监听 Web 层与引擎的改动。服务固定使用 Render `free` 套餐和 `singapore` 区域；
+部署时在 Render Dashboard 配置 API Key，不要提交 `.env`。
 
 本机当前的两个兄弟目录结构请使用 `Dockerfile.local`：
 
