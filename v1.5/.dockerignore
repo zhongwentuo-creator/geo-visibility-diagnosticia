@@ -1,0 +1,9 @@
+.git
+.env
+.venv
+__pycache__
+output
+tests
+docs
+desgn
+design-qa.md

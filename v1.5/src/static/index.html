@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f9fa">
+  <title>GEO 可见度诊断师 · V1.5</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <aside class="icon-rail" aria-label="主导航">
+      <a class="product-mark" href="#new-diagnosis" aria-label="GEO 可见度诊断师首页">
+        <img class="product-logo" src="assets/geo_logo.svg" alt="">
+      </a>
+      <nav class="rail-nav" aria-label="产品功能">
+        <a class="rail-link is-active" href="#new-diagnosis" aria-current="page" onclick="selectRailNav(this)"><i class="rail-icon fa-solid fa-compass" data-regular="fa-regular fa-compass" data-solid="fa-solid fa-compass" aria-hidden="true"></i><span>诊断</span></a>
+        <a class="rail-link" href="#history" onclick="selectRailNav(this)"><i class="rail-icon fa-regular fa-clock" data-regular="fa-regular fa-clock" data-solid="fa-solid fa-clock" aria-hidden="true"></i><span>记录</span></a>
+        <a class="rail-link" href="#insights" onclick="selectRailNav(this)"><i class="rail-icon fa-regular fa-chart-bar" data-regular="fa-regular fa-chart-bar" data-solid="fa-solid fa-chart-bar" aria-hidden="true"></i><span>洞察</span></a>
+      </nav>
+      <button class="rail-help" type="button" aria-label="查看使用说明" onclick="showHelp()"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+    </aside>
+
+    <aside class="workspace-sidebar" aria-label="诊断会话">
+      <div class="workspace-topline">
+        <h1>开始诊断</h1>
+        <button class="icon-button" type="button" aria-label="收起会话侧栏" title="收起侧栏"><i class="fa-solid fa-sidebar" aria-hidden="true"></i></button>
+      </div>
+      <button class="new-diagnosis-button" type="button" onclick="resetWorkspace()"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>新诊断</span></button>
+
+      <section class="recent-section" aria-labelledby="recent-heading">
+        <h2 id="recent-heading">最近</h2>
+        <div class="recent-list">
+          <button type="button" class="recent-item" data-brand="听力熊" data-category="儿童 AI 对话智能体" onclick="loadRecent(this)">
+            <span class="recent-icon teal"><i class="fa-solid fa-headphones-simple" aria-hidden="true"></i></span><span>听力熊 GEO 诊断</span>
+          </button>
+          <button type="button" class="recent-item" data-brand="小度" data-category="智能音箱与 AI 助手" onclick="loadRecent(this)">
+            <span class="recent-icon sand"><i class="fa-solid fa-cube" aria-hidden="true"></i></span><span>小度竞品扫描</span>
+          </button>
+          <button type="button" class="recent-item" data-brand="阿尔法蛋" data-category="儿童智能学习设备" onclick="loadRecent(this)">
+            <span class="recent-icon lilac"><i class="fa-solid fa-robot" aria-hidden="true"></i></span><span>阿尔法蛋可见度</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="sidebar-footnote"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> 诊断数据仅在本次会话中保留</div>
+    </aside>
+
+    <main class="workspace-main" id="new-diagnosis" tabindex="0">
+      <header class="workspace-header">
+        <p class="breadcrumb">GEO 诊断工作台 <span>/</span> 新诊断</p>
+        <div class="header-actions">
+          <span class="connection-state" id="connection-state"><span class="status-dot"></span>准备就绪</span>
+          <button class="header-button" type="button" onclick="focusComposer()"><i class="fa-regular fa-folder-open" aria-hidden="true"></i> 诊断记录</button>
+        </div>
+      </header>
+
+      <div class="scroll-region" id="scroll-region" aria-label="诊断对话内容" tabindex="0">
+        <section class="welcome-panel" id="welcome-panel" aria-labelledby="welcome-title">
+          <h2 id="welcome-title">你好，今天想诊断什么？</h2>
+          <p>输入品牌与产品类型，GEO 诊断师将通过 9 个阶段梳理可见度、竞争格局与行动方向。</p>
+        </section>
+
+        <section class="conversation" id="conversation" aria-live="polite" aria-label="诊断过程"></section>
+      </div>
+
+      <section class="composer-wrap" aria-label="发起 GEO 诊断">
+        <form class="composer" id="diagnosis-form" onsubmit="startDiagnosis(event)">
+          <div class="composer-main">
+            <textarea id="diagnostic-request" rows="2" placeholder="例如：帮我诊断听力熊，它是一款儿童 AI 对话智能体，官网 https://example.com。"></textarea>
+          </div>
+
+          <details class="intent-details" id="intent-details">
+            <summary>未识别完整信息？手动补充<span class="manual-help-tooltip" tabindex="0" aria-label="系统会从上方描述自动识别品牌、产品类型和官网；无法识别时可在这里补充。"><i class="fa-regular fa-circle-question" aria-hidden="true"></i><span class="manual-help-tooltip-content" role="tooltip">系统会从上方描述自动识别品牌、产品类型和官网；无法识别时可在这里补充。</span></span></summary>
+            <div class="config-row">
+              <label class="field compact-field"><span>品牌名称</span><input id="brand-input" autocomplete="organization" placeholder="例如：听力熊"></label>
+              <label class="field compact-field"><span>产品类型</span><input id="category-input" placeholder="例如：儿童 AI 对话智能体"></label>
+              <label class="field website-field"><span>官网（可选）</span><input id="website-input" type="url" autocomplete="url" placeholder="https://"></label>
+            </div>
+          </details>
+
+          <div class="composer-actions">
+            <label class="control-select"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span class="sr-only">诊断模式</span><select id="mode-select"><option value="full">全量诊断</option></select></label>
+            <label class="control-select"><i class="fa-solid fa-globe" aria-hidden="true"></i><span class="sr-only">AI 搜索平台</span><select id="platform-select"><option value="doubao">豆包</option><option value="chatgpt">ChatGPT</option><option value="perplexity">Perplexity</option></select></label>
+            <span class="workflow-hint"><i class="fa-solid fa-list-check" aria-hidden="true"></i> 9 阶段工作流</span>
+            <div class="composer-spacer"></div>
+            <button class="text-button" type="button" onclick="startDemo()">预览流程</button>
+            <button class="send-button" id="btn-start" type="submit"><span>开始诊断</span><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+          </div>
+        </form>
+        <p class="form-message" id="form-message" role="status"></p>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="help-dialog" id="help-modal" aria-labelledby="help-title">
+    <div class="dialog-heading"><div><p class="eyebrow">使用说明</p><h2 id="help-title">GEO 可见度诊断</h2></div><button class="icon-button" type="button" onclick="closeHelp()" aria-label="关闭说明"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+    <p>GEO 是面向生成式搜索的可见度优化。一次诊断会依次完成用户画像、基建评估、竞品分析、AI 搜索测试、综合评估和建议生成。</p>
+    <div class="dialog-actions"><button class="send-button" type="button" onclick="closeHelp()">知道了</button></div>
+  </dialog>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

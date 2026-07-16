@@ -1,0 +1,50 @@
+name: GEO V1.5 quality gate
+
+on:
+  push:
+    paths:
+      - 'v1.5/**'
+      - 'main.py'
+      - 'config.py'
+      - 'requirements.txt'
+      - 'stages/**'
+      - 'report/**'
+      - 'utils/**'
+      - '.github/workflows/geo-v15-ci.yml'
+  pull_request:
+    paths:
+      - 'v1.5/**'
+      - 'main.py'
+      - 'config.py'
+      - 'requirements.txt'
+      - 'stages/**'
+      - 'report/**'
+      - 'utils/**'
+      - '.github/workflows/geo-v15-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v1.5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q
+      - run: python -m py_compile src/api.py src/engine_adapter.py
+      - run: node --check src/static/js/app.js
+
+  container-build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f v1.5/Dockerfile -t geo-diagnosis-v15 .
