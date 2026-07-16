@@ -17,13 +17,13 @@
 - [x] 部署工件：`Dockerfile`、`render.yaml`、`.env.example`、部署说明已补齐。
 - [x] GitHub 源码发布：V1.0 根目录引擎、`v1.5/` 与 `.github/workflows/geo-v15-ci.yml` 已通过 PR #1 合并到 `main`（merge commit `21918de`，4 项检查通过）。
 - [x] Render Docker Web Service：通过 `v1.5/render.yaml` 创建 `geo-visibility-diagnosis-v15`（Free / Singapore）；公网 `/health` 已返回 `{"status":"ok","version":"1.5.0"}`。详见 `PROJECT_NODE_RECORDS.md`。
+- [x] Render 生产配置：已选择 Kimi + 豆包并配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`、`CORS_ALLOW_ORIGINS`、`KIMI_API_URL`、`KIMI_MODEL`；PR #3（merge commit `2a21e8d`）确保 Kimi-only 配置路由至 Moonshot。密钥值不进入仓库。详见 `PROJECT_NODE_RECORDS.md`。
 
 ## 待完成的发布门禁
 
-- [ ] 在 Render 配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`（以及实际使用的平台密钥）和生产域名 `CORS_ALLOW_ORIGINS`。
 - [ ] 获得公网 URL 后，用真实品牌完成一次带有效密钥的 SSE、JSON、HTML 报告验收。
 - [ ] 用外网桌面端、手机各走一遍；24 小时后复测一次。
 
 ## 验收结论
 
-当前状态为 **公网服务已可用、待生产诊断验收**。生产密钥、真实品牌诊断、跨设备走查与 24 小时稳定性仍未完成。
+当前状态为 **公网服务与生产配置已就绪、待生产诊断验收**。真实品牌诊断、跨设备走查与 24 小时稳定性仍未完成。

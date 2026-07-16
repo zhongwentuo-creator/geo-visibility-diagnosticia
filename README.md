@@ -14,7 +14,7 @@
 |---|---|---|
 | V1.0 diagnostic engine | Repository root: `main.py`, `stages/`, `utils/`, `report/` | Frozen; reused by V1.5 without changing diagnostic algorithms. |
 | V1.5 Web experience | `v1.5/` | Merged to `main`; FastAPI, SSE, conversational UI, tests, Docker and Render configuration are ready. |
-| V1.5 release evidence | `v1.5/docs/plan.md`, `v1.5/docs/ACCEPTANCE.md`, `v1.5/docs/PROJECT_NODE_RECORDS.md` | Render service and public health check have passed; production-key diagnosis, cross-device walkthrough and 24-hour retest remain pending. |
+| V1.5 release evidence | `v1.5/docs/plan.md`, `v1.5/docs/ACCEPTANCE.md`, `v1.5/docs/PROJECT_NODE_RECORDS.md` | Render service, public health check and production configuration are complete; real-brand diagnosis, cross-device walkthrough and 24-hour retest remain pending. |
 | Project governance | `AGENTS.md`, `MEMORY.md`, `docs/VIBECODING_ACCEPTANCE_MATRIX.md` | Rules, confirmed decisions and V1.5 traceability. |
 
 The V1.5 release was merged through PR #1 (`21918de`) after four GitHub checks passed. It is source release evidence, not proof of public deployment.
