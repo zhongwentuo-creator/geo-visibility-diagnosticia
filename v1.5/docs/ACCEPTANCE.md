@@ -11,6 +11,7 @@
 | 本地 V1.0 真实引擎联调 | 通过（降级数据） | `127.0.0.1:8016` 完成「听力熊」诊断，返回 9 阶段事件、AIVO 69/100、JSON 与 50,014 字节 HTML 报告。 |
 | 部署工件 | 已准备 | Dockerfile、Render Blueprint、环境变量样例、CI 工作流均已生成；当前机器未安装 Docker，镜像构建留待 GitHub Actions/Render 执行。 |
 | GitHub 源码与 CI 发布 | 通过 | PR #1 已合并到 `main`（merge commit `21918de`）；V1.0 根目录引擎、`v1.5/` 和 `geo-v15-ci.yml` 位于同一仓库，4 项 GitHub 检查通过。 |
+| Render Docker Web Service | 通过 | 2026-07-16 从 `main` 的 `v1.5/render.yaml` 创建 `geo-visibility-diagnosis-v15`（Free / Singapore）；Render 显示 `Deploy live`，公网 `/health` 实测返回 `{"status":"ok","version":"1.5.0"}`。详见 `PROJECT_NODE_RECORDS.md`。 |
 
 ## 已知边界
 
@@ -19,8 +20,7 @@
 ## 发布前阻断项
 
 1. 配置生产 API Key 与 `CORS_ALLOW_ORIGINS`。
-2. 创建 Render 服务并取得公网 URL。
-3. 在公网、真实密钥下完成一次真实品牌诊断；桌面端与手机端各验证一次，24 小时后复测。
+2. 在公网、真实密钥下完成一次真实品牌诊断；桌面端与手机端各验证一次，24 小时后复测。
 
 ## 验收命令
 

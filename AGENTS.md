@@ -12,6 +12,7 @@
 - `AGENTS.md`：协作规则、版本边界、验证和发布门禁；不重复完整 PRD。
 - `MEMORY.md`：已确认的决策、路径、验证结论与踩坑；不记录密钥，也不复制长篇规格。
 - `v1.5/docs/plan.md`：V1.5 唯一任务状态来源；`v1.5/docs/ACCEPTANCE.md`：验收证据来源。
+- `v1.5/docs/PROJECT_NODE_RECORDS.md`：发布节点的非敏感运行数据（URL、配置选择、时间、健康检查与证据链接）；不替代验收结论。
 - `docs/VIBECODING_ACCEPTANCE_MATRIX.md`：从 VibeCoding 达成目录抽取的 V1.5 总验收矩阵。
 
 ### 0.2 版本边界
@@ -25,7 +26,7 @@
 1. 先阅读本文件、`MEMORY.md`、相关版本 README 和 `docs/`；涉及需求变动先更新 PRD/设计/计划，再改代码。
 2. 仅提交任务相关文件；密钥只存在部署平台或本地 `.env`，永不提交到仓库、日志或文档。
 3. 涉及 V1.5 的代码变更至少运行对应 pytest；部署相关变更还需验证 CI、Render 和公网诊断。
-4. 每完成一个发布门禁，在 `v1.5/docs/plan.md`、`v1.5/docs/ACCEPTANCE.md` 和 VibeCoding 验收矩阵中回填同一份证据。
+4. 每完成一个发布门禁，在 `v1.5/docs/plan.md`、`v1.5/docs/ACCEPTANCE.md`、`v1.5/docs/PROJECT_NODE_RECORDS.md` 和 VibeCoding 验收矩阵中回填同一份证据。
 5. 用功能分支和 PR 进入 `main`；不得把“已推送分支”写成“已上线”。
 
 ---

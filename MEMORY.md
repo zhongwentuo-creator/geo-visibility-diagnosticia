@@ -9,9 +9,10 @@
 
 - **仓库结构**：根目录是 V1.0 九阶段引擎；`v1.5/` 是 FastAPI、SSE、静态对话工作台、测试和部署工件。V1.5 不修改诊断算法。
 - **GitHub 交付**：PR #1 已合并到 `main`（merge commit `21918de`）；四项 GitHub 检查通过。该证据只表示源码与 CI 发布完成，不表示公网可用。
-- **V1.5 当前状态**：本地链路和回归测试已通过；Render 服务、生产密钥、生产域名/CORS、真实品牌公网诊断、桌面与手机走查、24 小时复测仍待完成。
-- **状态来源**：任务状态只看 `v1.5/docs/plan.md`；验收证据只看 `v1.5/docs/ACCEPTANCE.md`；课程/VibeCoding 范围映射只看 `docs/VIBECODING_ACCEPTANCE_MATRIX.md`。
-- **安全边界**：API Key、Token、生产 URL 的敏感配置不写入仓库、`MEMORY.md` 或验收截图。生产值仅配置在部署平台。
+- **Render 节点 2**：2026-07-16 已通过 Blueprint 创建免费 Docker Web Service；服务为 `geo-visibility-diagnosis-v15`，区域为 `singapore`。公网健康检查已返回 `{"status":"ok","version":"1.5.0"}`。
+- **V1.5 当前状态**：生产 API Key、`CORS_ALLOW_ORIGINS`、真实品牌公网诊断、桌面与手机走查、24 小时复测仍待完成。
+- **状态来源**：任务状态只看 `v1.5/docs/plan.md`；验收证据只看 `v1.5/docs/ACCEPTANCE.md`；节点运行数据看 `v1.5/docs/PROJECT_NODE_RECORDS.md`；课程/VibeCoding 范围映射只看 `docs/VIBECODING_ACCEPTANCE_MATRIX.md`。
+- **安全边界**：API Key、Token 和任何密钥值不写入仓库、`MEMORY.md`、节点记录或验收截图。可公开的部署 URL、健康检查结果和非敏感配置选择可写入节点记录；生产密钥值仅配置在部署平台。
 
 以下记录是历史联调经验；若与“当前有效事实”冲突，以当前有效事实和对应版本文档为准。
 
