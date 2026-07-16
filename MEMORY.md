@@ -5,15 +5,17 @@
 
 ---
 
-## 当前有效事实（2026-07-16）
+## 当前有效事实（2026-07-17）
 
 - **仓库结构**：根目录是 V1.0 九阶段引擎；`v1.5/` 是 FastAPI、SSE、静态对话工作台、测试和部署工件。V1.5 不修改诊断算法。
 - **GitHub 交付**：PR #1 已合并到 `main`（merge commit `21918de`）；四项 GitHub 检查通过。该证据只表示源码与 CI 发布完成，不表示公网可用。
 - **Render 节点 2**：2026-07-16 已通过 Blueprint 创建免费 Docker Web Service；服务为 `geo-visibility-diagnosis-v15`，区域为 `singapore`。公网健康检查已返回 `{"status":"ok","version":"1.5.0"}`。
 - **Render 节点 3**：生产环境已选择 Kimi + 豆包，并在 Render 配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`、`CORS_ALLOW_ORIGINS`、`KIMI_API_URL` 与 `KIMI_MODEL`。密钥值和 CORS 具体值不记录在仓库；`KIMI_API_URL` 使用 Moonshot OpenAI 兼容 base URL，模型为 `moonshot-v1-8k`。
 - **生产路由修复**：PR #3 已合并到 `main`（merge commit `2a21e8d`，包含 `e286a6e`）。Stage 1 与通用 LLM 客户端在仅配置 Kimi Key 时会路由至 Moonshot，避免误落到 OpenAI 默认地址。
-- **V1.5 当前状态**：公网服务与生产配置均已完成；真实品牌公网诊断、桌面与手机走查、24 小时复测仍待完成。节点 4 必须验证真实的 Kimi/豆包调用、SSE、JSON 与 HTML 报告，不能以 `/health` 或变量存在替代。
-- **状态来源**：任务状态只看 `v1.5/docs/plan.md`；验收证据只看 `v1.5/docs/ACCEPTANCE.md`；节点运行数据看 `v1.5/docs/PROJECT_NODE_RECORDS.md`；课程/VibeCoding 范围映射只看 `docs/VIBECODING_ACCEPTANCE_MATRIX.md`。
+- **节点 4 首次生产诊断**：真实品牌任务在后台完成 9 阶段并成功生成 JSON/HTML 报告，但客户端 SSE 在 Stage 4 长时间无事件时提前结束，因此节点 4 仅部分通过。Stage 4 约耗时 113 秒，是当前连接稳定性的主要风险。
+- **SSE 修复决策**：不调整 V1.0 诊断算法、模型、查询数量或评分；通过周期 heartbeat、Stage 4 单条查询进度、唯一完成阶段计数和前端状态恢复解决“后台成功、前端误报失败”。观测回调失败不得影响诊断主流程。
+- **V1.5 当前状态**：公网服务、生产配置及首次真实诊断均已产生证据；JSON/HTML 已通过，完整 SSE 仍需在修复部署后复测。桌面与手机走查、24 小时复测仍待完成。
+- **状态来源**：节点 4 当前行动先看 `v1.5/docs/NODE4_EXECUTION.md`；任务状态只看 `v1.5/docs/plan.md`；验收证据只看 `v1.5/docs/ACCEPTANCE.md`；节点运行数据看 `v1.5/docs/PROJECT_NODE_RECORDS.md`；课程/VibeCoding 范围映射只看 `docs/VIBECODING_ACCEPTANCE_MATRIX.md`。
 - **安全边界**：API Key、Token 和任何密钥值不写入仓库、`MEMORY.md`、节点记录或验收截图。可公开的部署 URL、健康检查结果和非敏感配置选择可写入节点记录；生产密钥值仅配置在部署平台。
 
 以下记录是历史联调经验；若与“当前有效事实”冲突，以当前有效事实和对应版本文档为准。
