@@ -21,6 +21,10 @@ services:
         sync: false
       - key: KIMI_API_KEY
         sync: false
+      - key: KIMI_API_URL
+        value: https://api.moonshot.cn/v1
+      - key: KIMI_MODEL
+        value: moonshot-v1-8k
       - key: DOUBAO_API_KEY
         sync: false
       - key: OPENAI_API_KEY
