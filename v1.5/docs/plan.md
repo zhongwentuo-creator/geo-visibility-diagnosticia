@@ -15,10 +15,10 @@
 - [x] 异常回归：测试夹具验证 `error` SSE 事件与状态查询。
 - [x] 自动化质量门禁：pytest、Python 编译、JS 语法、Docker 构建已写入 GitHub Actions 工作流。
 - [x] 部署工件：`Dockerfile`、`render.yaml`、`.env.example`、部署说明已补齐。
+- [x] GitHub 源码发布：V1.0 根目录引擎、`v1.5/` 与 `.github/workflows/geo-v15-ci.yml` 已通过 PR #1 合并到 `main`（merge commit `21918de`，4 项检查通过）。
 
 ## 待用户完成的发布门禁
 
-- [ ] 将 V1.5 发布到既有 `zhongwentuo-creator/geo-visibility-diagnosticia` 仓库的 `v1.5/` 目录；保留根目录 V1.0 引擎，并让 GitHub Actions 在仓库根目录触发。
 - [ ] 在 Render 创建 Docker Web Service，导入 `GEO 可见度诊断_v1.5/render.yaml`。
 - [ ] 在 Render 配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`（以及实际使用的平台密钥）和生产域名 `CORS_ALLOW_ORIGINS`。
 - [ ] 获得公网 URL 后，用真实品牌完成一次带有效密钥的 SSE、JSON、HTML 报告验收。
