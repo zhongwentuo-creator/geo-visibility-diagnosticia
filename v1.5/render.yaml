@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: geo-visibility-diagnosis-v15
+    runtime: docker
+    dockerfilePath: v1.5/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - v1.5/**
+        - main.py
+        - config.py
+        - requirements.txt
+        - stages/**
+        - report/**
+        - utils/**
+    envVars:
+      - key: CORS_ALLOW_ORIGINS
+        sync: false
+      - key: KIMI_API_KEY
+        sync: false
+      - key: DOUBAO_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PERPLEXITY_API_KEY
+        sync: false

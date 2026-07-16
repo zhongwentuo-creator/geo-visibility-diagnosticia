@@ -40,8 +40,8 @@ While SEO optimizes for search engine ranking, GEO optimizes for **AI platforms'
 ### 1. Clone
 
 ```bash
-git clone https://github.com/zhongwentuo-creator/geo-visibility-diagnostician.git
-cd geo-visibility-diagnostician
+git clone https://github.com/zhongwentuo-creator/geo-visibility-diagnosticia.git
+cd geo-visibility-diagnosticia
 ```
 
 ### 2. Virtual Environment

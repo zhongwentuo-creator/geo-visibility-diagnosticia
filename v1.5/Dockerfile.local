@@ -1,0 +1,18 @@
+FROM python:3.12-slim
+
+# 本地工作区构建：上下文为「AI Coding」目录，V1.0 引擎与 V1.5 为兄弟目录。
+WORKDIR /app
+
+COPY ["GEO可见度诊断师_v1.0引擎/v1.0/src", "/app/engine"]
+COPY ["GEO 可见度诊断_v1.5/requirements.txt", "/app/web/requirements.txt"]
+RUN pip install --no-cache-dir -r /app/web/requirements.txt
+
+COPY ["GEO 可见度诊断_v1.5/src", "/app/web"]
+WORKDIR /app/web
+
+ENV GEO_ENGINE_ROOT=/app/engine
+ENV PYTHONPATH=/app/web:/app/engine
+ENV PORT=8000
+EXPOSE 8000
+
+CMD uvicorn api:app --host 0.0.0.0 --port "${PORT}"
