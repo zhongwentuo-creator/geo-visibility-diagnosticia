@@ -5,6 +5,21 @@
 
 ---
 
+## 当前有效事实（2026-07-16）
+
+- **仓库结构**：根目录是 V1.0 九阶段引擎；`v1.5/` 是 FastAPI、SSE、静态对话工作台、测试和部署工件。V1.5 不修改诊断算法。
+- **GitHub 交付**：PR #1 已合并到 `main`（merge commit `21918de`）；四项 GitHub 检查通过。该证据只表示源码与 CI 发布完成，不表示公网可用。
+- **Render 节点 2**：2026-07-16 已通过 Blueprint 创建免费 Docker Web Service；服务为 `geo-visibility-diagnosis-v15`，区域为 `singapore`。公网健康检查已返回 `{"status":"ok","version":"1.5.0"}`。
+- **Render 节点 3**：生产环境已选择 Kimi + 豆包，并在 Render 配置 `KIMI_API_KEY`、`DOUBAO_API_KEY`、`CORS_ALLOW_ORIGINS`、`KIMI_API_URL` 与 `KIMI_MODEL`。密钥值和 CORS 具体值不记录在仓库；`KIMI_API_URL` 使用 Moonshot OpenAI 兼容 base URL，模型为 `moonshot-v1-8k`。
+- **生产路由修复**：PR #3 已合并到 `main`（merge commit `2a21e8d`，包含 `e286a6e`）。Stage 1 与通用 LLM 客户端在仅配置 Kimi Key 时会路由至 Moonshot，避免误落到 OpenAI 默认地址。
+- **V1.5 当前状态**：公网服务与生产配置均已完成；真实品牌公网诊断、桌面与手机走查、24 小时复测仍待完成。节点 4 必须验证真实的 Kimi/豆包调用、SSE、JSON 与 HTML 报告，不能以 `/health` 或变量存在替代。
+- **状态来源**：任务状态只看 `v1.5/docs/plan.md`；验收证据只看 `v1.5/docs/ACCEPTANCE.md`；节点运行数据看 `v1.5/docs/PROJECT_NODE_RECORDS.md`；课程/VibeCoding 范围映射只看 `docs/VIBECODING_ACCEPTANCE_MATRIX.md`。
+- **安全边界**：API Key、Token 和任何密钥值不写入仓库、`MEMORY.md`、节点记录或验收截图。可公开的部署 URL、健康检查结果和非敏感配置选择可写入节点记录；生产密钥值仅配置在部署平台。
+
+以下记录是历史联调经验；若与“当前有效事实”冲突，以当前有效事实和对应版本文档为准。
+
+---
+
 ## 2026-07-14 联调修复记录（9 Bug 修复）
 
 ### 背景
