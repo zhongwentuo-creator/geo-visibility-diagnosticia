@@ -1,64 +1,48 @@
-# V1.5 项目各节关键数据记录
+# V1.5 项目各节点关键数据记录
 
-> 用于保存已验证的发布节点事实，方便后续协作、复测和交接。它不替代 `plan.md` 的任务状态或 `ACCEPTANCE.md` 的验收结论。
+> 保存可复核、非敏感的发布事实。任务状态以 `plan.md` 为准，验收结论以 `ACCEPTANCE.md` 为准。
 
 ## 记录规则
 
-- 只记录已产生证据的非敏感数据：URL、服务名、版本、区域、套餐、时间、检查结果和关联提交。
-- API Key、Token、密码和密钥值永不记录；仅可记录“已配置”或“未配置”状态。
-- 每项记录须同时回填 `plan.md` 与 `ACCEPTANCE.md`；若三者冲突，以验收记录和实际平台状态为准。
+- 只记录 URL、服务名、时间、任务 ID、公开响应结果与关联提交；不记录 API Key、Token、Cookie 或密钥值。
+- 评分、耗时会随真实模型输出波动；任务是否成功以 `status=success`、9 阶段和报告可读性为准。
 
 ## 节点 2：Render Docker Web Service
 
 | 字段 | 已验证数据 |
 |---|---|
 | 完成日期 | 2026-07-16 |
-| GitHub 仓库 / 分支 | `zhongwentuo-creator/geo-visibility-diagnosticia` / `main` |
-| Blueprint 路径 | `v1.5/render.yaml` |
-| Blueprint / 服务名 | `geo-visibility-diagnosis-v15` |
-| 运行形态 | Render Docker Web Service，Blueprint managed |
-| 套餐 / 区域 | Free / Singapore |
+| 服务 | `geo-visibility-diagnosis-v15`，Render Docker Web Service，Free / Singapore |
 | 公网地址 | https://geo-visibility-diagnosis-v15.onrender.com |
-| 健康检查 | https://geo-visibility-diagnosis-v15.onrender.com/health |
-| 健康检查实测 | `{"status":"ok","version":"1.5.0"}` |
-| 部署结果 | Render Events 显示 `Deploy live` |
-| 关联源码版本 | `ef17ee3`（PR #2 的合并提交） |
-| API Key / CORS | 未配置，属于节点 3 |
-| 已知运行特征 | Free 实例闲置后会休眠，首次访问可能延迟约 50 秒。 |
+| 健康检查 | `/health` 返回 `{"status":"ok","version":"1.5.0"}` |
 
-## 节点 3：Render 生产 API 与域名配置
+## 节点 3：生产配置
 
 | 字段 | 已验证数据 |
 |---|---|
-| 完成日期 | 2026-07-16 |
-| 生产服务 | `geo-visibility-diagnosis-v15`（Render Environment） |
-| 模型提供方 | Kimi（通用 LLM）+ 豆包（AI 搜索） |
-| 已配置密钥项 | `KIMI_API_KEY`、`DOUBAO_API_KEY`；仅记录已配置状态，不记录值。 |
-| 已配置域名项 | `CORS_ALLOW_ORIGINS` 已配置为生产访问来源；具体值不记录在仓库。 |
-| 非敏感 Kimi 配置 | `KIMI_API_URL=https://api.moonshot.cn/v1`；`KIMI_MODEL=moonshot-v1-8k`。 |
-| 路由源码版本 | PR #3 merge commit `2a21e8d`（包含 `e286a6e`）；Kimi-only 配置会使用 Moonshot 兼容端点。 |
-| 配置后健康检查 | https://geo-visibility-diagnosis-v15.onrender.com/health 返回 `{"status":"ok","version":"1.5.0"}`。 |
-| 节点结论 | 生产配置已完成；尚未以真实品牌验证外部 API 是否成功返回诊断数据。 |
+| 模型与域名 | Kimi（通用 LLM）+ 豆包（AI 搜索）；生产 CORS 来源已配置。 |
+| 密钥 | `KIMI_API_KEY`、`DOUBAO_API_KEY` 已在 Render 配置；值不记录。 |
+| 路由修复 | PR #3 merge commit `2a21e8d`；Kimi-only 环境正确使用 Moonshot 兼容端点。 |
 
-## 节点 4：真实品牌公网完整诊断
+## 节点 4：SSE 修复后的真实品牌验收
 
 | 字段 | 已验证数据 |
 |---|---|
-| 首次执行日期 | 2026-07-16 |
-| 公网服务 | https://geo-visibility-diagnosis-v15.onrender.com |
-| 品牌 / 产品 / 平台 | 听力熊 / 儿童 AI 对话智能体 / doubao |
-| 官网 | https://www.tinglexiong.com |
-| 首次任务 ID | `GEO-20260716-151348-5d5384` |
-| 后台任务结果 | `success`；9 个阶段均完成 |
-| 关键业务结果 | AIVO 81（良好）；18 条查询；品牌提及率 94.4% |
-| 主要阶段耗时 | Stage 1：18.500 秒；Stage 2：4.478 秒；Stage 3：1.663 秒；Stage 4：113.082 秒；Stage 6：2.111 秒 |
-| SSE 结果 | 未通过。客户端在 Stage 4 开始后提前结束；后台任务随后成功完成。 |
-| JSON 报告 | HTTP 200；`application/json`；31,803 字节 |
-| HTML 报告 | HTTP 200；`text/html`；52,387 字节 |
-| 根因判断 | Stage 4 长时间没有中间事件，连接可能在代理/客户端侧被关闭；前端把原生 EventSource 断线当作任务失败。 |
-| 修复记录 | PR #5 / commit `7a79b48`；增加 heartbeat、Stage 4 查询进度、唯一完成阶段计数和前端状态恢复；代码与 CI 已通过，尚未部署。 |
-| 当前结论 | 节点 4 部分通过、仍在进行中；JSON/HTML 通过，完整 SSE 待修复部署后复测。 |
+| 修复发布 | PR #5 已合并：`bf8684238d939acc5180c088dd7923eea87701d4`。 |
+| 任务 | `GEO-20260716-234717-86530a`；听力熊 / 儿童 AI 对话智能体 / doubao。 |
+| 结果 | `success`，9 阶段完成；Stage 4 为 9/9 查询（60.394 秒）；AIVO 75。 |
+| SSE 可观测性 | 收到 `heartbeat` 与 `search_progress`；生产前端具备断流状态恢复。 |
+| 报告 | JSON 200（21,264 bytes）；HTML 200（47,399 bytes）。 |
 
-## 下一步
+## 节点 5：跨设备与 T+24 小时复测
 
-经用户确认后合并 PR #5，等待 Render 部署完成，再按 `NODE4_EXECUTION.md` 只执行一次新的真实品牌诊断并同步回填验收证据。任何 Key、Token、cookie 或请求认证信息不得写入记录。
+| 验收面 | 任务与结果 |
+|---|---|
+| 桌面端 | `GEO-20260716-235520-a88301`：`success`，9 阶段，Stage 4 为 18 条查询，AIVO 83；JSON 200（31,089 bytes），HTML 200（52,683 bytes）。 |
+| 手机 4G | `GEO-20260717-002702-daf325`：iPhone / Safari / 4G，`success`，Stage 4 为 18/18 查询，AIVO 78；完成页、JSON 与 HTML 报告均已操作。 |
+| T+24 复测 | `GEO-20260718-014657-f8732c`：距手机任务启动约 25 小时 20 分钟，`success`，Stage 4 为 18/18 查询（106.914 秒），AIVO 82；JSON 200（31,421 bytes），HTML 200（52,306 bytes）。 |
+| 结论 | 无阻断问题，节点 5 通过。 |
+
+## 结项状态
+
+节点 1–6 已完成，V1.5 发布验收通过。后续问题与技术债见 `ISSUE_BACKLOG.md`，不要因它们存在而回退本次已验证的发布状态。

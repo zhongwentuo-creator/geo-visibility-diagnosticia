@@ -12,7 +12,10 @@
 - `AGENTS.md`：协作规则、版本边界、验证和发布门禁；不重复完整 PRD。
 - `MEMORY.md`：已确认的决策、路径、验证结论与踩坑；不记录密钥，也不复制长篇规格。
 - `v1.5/docs/plan.md`：V1.5 唯一任务状态来源；`v1.5/docs/ACCEPTANCE.md`：验收证据来源。
-- `v1.5/docs/NODE4_EXECUTION.md`：节点 4 当前行动、复测顺序和跨对话交接入口；不替代计划或验收结论。
+- `v1.5/docs/ISSUE_BACKLOG.md`：V1.5 问题、风险与改进机会的唯一待办池；不替代任务计划或验收记录。
+- `v1.5/docs/SDD.md`：当前实现、运行边界与技术风险说明；不替代产品需求或验收记录。
+- `v1.5/docs/NODE4_EXECUTION.md`：节点 4 的历史执行、修复和生产复测记录；不替代计划或验收结论。
+- `v1.5/docs/NODE5_EXECUTION.md`：桌面、手机与 24 小时稳定性验收的执行记录和交接入口；不替代计划或验收结论。
 - `v1.5/docs/PROJECT_NODE_RECORDS.md`：发布节点的非敏感运行数据（URL、配置选择、时间、健康检查与证据链接）；不替代验收结论。
 - `docs/VIBECODING_ACCEPTANCE_MATRIX.md`：从 VibeCoding 达成目录抽取的 V1.5 总验收矩阵。
 
@@ -30,12 +33,17 @@
 4. 每完成一个发布门禁，在 `v1.5/docs/plan.md`、`v1.5/docs/ACCEPTANCE.md`、`v1.5/docs/PROJECT_NODE_RECORDS.md` 和 VibeCoding 验收矩阵中回填同一份证据。
 5. 用功能分支和 PR 进入 `main`；不得把“已推送分支”写成“已上线”。
 
-### 0.4 节点 4 协作约定
+### 0.4 节点 4 协作约定（已完成，保留作历史复核）
 
-- 继续节点 4 时，先读本文件第 0 节、`MEMORY.md` 的“当前有效事实”和 `v1.5/docs/NODE4_EXECUTION.md`，不要默认重扫整个仓库或重复已完成的生产诊断。
-- 当前行动和临时 PR/部署状态写入 `NODE4_EXECUTION.md`；稳定根因与决策写入 `MEMORY.md`；任务状态、验收结论和运行数据仍分别写入其唯一来源。
-- SSE 断线时先查询已有任务状态，不立即创建新任务；只有确认 Render 已部署目标提交后才发起新的真实品牌付费诊断。
-- 节点 4 未同时获得完整 SSE、JSON 和 HTML 证据前，保持“进行中/待验收”。
+- 复核节点 4 时，先读本文件第 0 节、`MEMORY.md` 的“当前有效事实”和 `v1.5/docs/NODE4_EXECUTION.md`，不要重复发起付费诊断。
+- SSE 断线时优先查询已有任务状态；任务状态、最终报告和已记录的 UI 完成态共同判断是否成功。
+
+### 0.5 节点 5 与发布结项协作约定
+
+- 继续跨设备或稳定性验收时，先读 `v1.5/docs/NODE5_EXECUTION.md`，再按需读取 `ACCEPTANCE.md`、`plan.md` 和节点记录；不因已完成的节点 4 重跑生产诊断。
+- 节点 5 的设备、网络、任务 ID、报告可用性和时间窗口写入 `NODE5_EXECUTION.md` 与 `PROJECT_NODE_RECORDS.md`；最终通过结论只写入 `ACCEPTANCE.md` 与 `plan.md`。
+- 24 小时观察窗口内不得改生产代码、Render 环境变量或部署版本；若发生变更，必须重新开始稳定性计时。
+- 发布验收通过不等于技术债清零。未阻断当前版本的限制继续维护在 `ISSUE_BACKLOG.md` 和 `SDD.md`，不要把它们伪装成已完成能力。
 
 ---
 
