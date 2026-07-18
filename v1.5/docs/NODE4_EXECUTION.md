@@ -13,22 +13,18 @@
 
 只有四项同时通过，节点 4 才能标记为完成。
 
-## 2. 当前状态
+## 2. 完成状态（历史复核）
 
-更新时间：2026-07-17
+更新时间：2026-07-18
 
-| 项目 | 当前事实 |
+| 项目 | 已验证事实 |
 |---|---|
 | 公网地址 | https://geo-visibility-diagnosis-v15.onrender.com |
-| 首次真实品牌 | 听力熊 / 儿童 AI 对话智能体 / https://www.tinglexiong.com / doubao |
-| 首次任务 ID | `GEO-20260716-151348-5d5384` |
-| 后端结果 | 9 阶段最终均为 `success`，AIVO 81（良好），18 条查询，品牌提及率 94.4% |
-| JSON | 通过：HTTP 200，`application/json`，31,803 字节 |
-| HTML | 通过：HTTP 200，`text/html`，52,387 字节 |
-| SSE | 未通过：客户端在 Stage 4 长时间无事件期间提前结束，但后台继续并成功完成 |
-| 主要风险 | Stage 4 耗时 113.082 秒；原实现没有中间事件，前端把原生 EventSource 断线当作任务失败 |
-| 修复状态 | PR #5（草稿）已提交 heartbeat、Stage 4 查询进度、状态恢复和回归测试；提交 `7a79b48`，CI 已通过，尚未合并或部署 |
-| 节点结论 | **进行中**。JSON/HTML 已有首次通过证据；必须部署 PR #5 后重新验证完整 SSE，不能提前标记节点 4 通过 |
+| 修复发布 | PR #5 已合并到 `main`，merge commit `bf8684238d939acc5180c088dd7923eea87701d4`；Render 公网脚本已包含 heartbeat、查询进度与状态恢复逻辑。 |
+| 复测任务 | `GEO-20260716-234717-86530a`，最终 `success`，9 阶段完成，Stage 4 为 9/9 查询，AIVO 75。 |
+| SSE | Stage 4 期间已收到 heartbeat 与查询进度；后续真实工作台在桌面、手机端均进入完成态。 |
+| JSON / HTML | JSON HTTP 200（21,264 bytes）；HTML HTTP 200（47,399 bytes）。 |
+| 节点结论 | **通过**。首次空闲断流保留为历史根因，后续跨设备与 T+24 证据见 `NODE5_EXECUTION.md`。 |
 
 PR：https://github.com/zhongwentuo-creator/geo-visibility-diagnosticia/pull/5
 
@@ -39,7 +35,8 @@ PR：https://github.com/zhongwentuo-creator/geo-visibility-diagnosticia/pull/5
 | `AGENTS.md` | 协作规则、版本边界、发布门禁 | 运行流水账、密钥 |
 | `MEMORY.md` | 已确认且可复用的事实、根因和决策 | 临时 PR 状态、重复规格 |
 | `README.md` / `v1.5/README.md` | 项目导航与当前版本入口 | 详细验收日志 |
-| `v1.5/docs/NODE4_EXECUTION.md` | 节点 4 当前行动、读取顺序、执行与交接 | 最终验收结论的唯一副本 |
+| `v1.5/docs/NODE4_EXECUTION.md` | 节点 4 修复、复测与历史交接 | 最终验收结论的唯一副本 |
+| `v1.5/docs/NODE5_EXECUTION.md` | 节点 5 跨设备与稳定性证据 | 最终验收结论的唯一副本 |
 | `v1.5/docs/plan.md` | V1.5 唯一任务状态 | 详细运行数据 |
 | `v1.5/docs/ACCEPTANCE.md` | 验收结论与通过/失败证据 | 密钥、未验证推断 |
 | `v1.5/docs/PROJECT_NODE_RECORDS.md` | 非敏感运行数据、任务 ID、耗时和响应结果 | 验收状态替代品 |
@@ -61,15 +58,9 @@ PR：https://github.com/zhongwentuo-creator/geo-visibility-diagnosticia/pull/5
 
 > 请读取 `AGENTS.md`、`MEMORY.md` 和 `v1.5/docs/NODE4_EXECUTION.md`，继续执行《GEO 可见度诊断师_1.5》第 4 节点；先报告当前状态与下一步，再执行，不要重复已完成验证。
 
-## 5. 下一步
+## 5. 后续
 
-1. 经用户确认后，将 PR #5 从草稿转为可合并并合入 `main`。
-2. 等待 Render 将对应 `main` 提交部署为 `Deploy live`。
-3. 验证 `/health`，确认服务版本可访问。
-4. 只运行一次新的真实品牌完整诊断，避免在旧版本或部署过程中重复产生 API 费用。
-5. 同时保存 SSE、任务状态、JSON 和 HTML 四类证据。
-6. 若四项通过，同步更新本文件、`plan.md`、`ACCEPTANCE.md`、`PROJECT_NODE_RECORDS.md` 和验收矩阵。
-7. 若仍失败，只记录新的失败位置和证据，不重复已经确认通过的 JSON/HTML 排查。
+节点 4 已完成，不再为本节点重复发起付费诊断。若出现新的 SSE、报告或部署问题，先写入 `ISSUE_BACKLOG.md`，再按新迭代计划处理。
 
 ## 6. 公网复测命令
 

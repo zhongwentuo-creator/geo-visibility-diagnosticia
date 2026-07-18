@@ -1,6 +1,6 @@
 # GEO 可见度诊断师 V1.0
 
-> 本文件是 V1.0 中文使用说明，不表示 V1.5 当前发布状态。V1.5 导航见 [V1.5 README](v1.5/README.md)；节点 4 当前行动见 [NODE4_EXECUTION.md](v1.5/docs/NODE4_EXECUTION.md)。
+> 本文件是 V1.0 中文使用说明，不表示 V1.5 当前发布状态。V1.5 已完成发布验收；导航见 [V1.5 README](v1.5/README.md) 与 [节点 5 执行记录](v1.5/docs/NODE5_EXECUTION.md)。
 
 > 帮助品牌量化自己在 AI 原生时代的"数字存在感"，并提供可执行的优化路径。
 > 
